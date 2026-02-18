@@ -35,23 +35,27 @@ include 'header.php';
             <ul class="role-options">
                 <li><i class="fas fa-dumpster"></i> Collect garbage from villages</li>
                 <li><i class="fas fa-sync-alt"></i> Update collection status</li>
-                <li class="click-here"><i class="fas fa-hand-pointer"></i> CLICK HERE</li>
+                <li><i class="fas fa-clipboard-check"></i> Track pickups</li>
+                <li><i class="fas fa-exclamation-triangle"></i> Report issues</li>
             </ul>
-            <a href="placeholder.php?role=collector" class="role-link">
-                COLLECTOR VIEW →
+            <!-- CHANGE THIS LINE -->
+            <a href="collector-dashboard.php" class="role-link">
+                COLLECTOR DASHBOARD →
             </a>
         </div>
 
-        <!-- Admin Card -->
+                <!-- Admin Card -->
         <div class="role-card admin">
             <i class="fas fa-chart-pie role-icon"></i>
             <h3>Admin</h3>
             <ul class="role-options">
                 <li><i class="fas fa-dashboard"></i> View Dashboard and Reports</li>
-                <li class="click-here"><i class="fas fa-hand-pointer"></i> CLICKHERE</li>
+                <li><i class="fas fa-flag"></i> Manage Issues</li>
+                <li><i class="fas fa-users"></i> Monitor Users</li>
+                <li><i class="fas fa-bell"></i> Send Notifications</li>
             </ul>
-            <a href="placeholder.php?role=admin" class="role-link">
-                ADMIN PANEL →
+            <a href="admin-dashboard.php" class="role-link">
+                ADMIN DASHBOARD →
             </a>
         </div>
     </div>

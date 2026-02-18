@@ -2,6 +2,13 @@
 // villager-dashboard.php - Villager Main Dashboard
 require_once 'config.php';
 requireLogin();
+
+// Check if user is villager
+if (getUserRole() !== 'villager') {
+    header('Location: role-selection.php');
+    exit;
+}
+
 // Set current date
 $current_date = "Thursday, February 05 2026";
 include 'header.php';
@@ -29,6 +36,7 @@ include 'header.php';
     </div>
 
     <div class="villager-actions">
+        <!-- In villager-dashboard.php, the villager-actions section -->
         <a href="calendar.php" class="action-card">
             <i class="fas fa-calendar-week"></i> Weekly View
         </a>

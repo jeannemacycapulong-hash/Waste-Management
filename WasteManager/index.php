@@ -138,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
     
-    if (isset($valid_users[$username]) && $valid_users[$username] === $password) {
+    if (isset($valid_users[$username]) && $valid_users[$username]['password'] === $password) {
         $_SESSION['user'] = $username;
         header('Location: role-selection.php');
         exit;

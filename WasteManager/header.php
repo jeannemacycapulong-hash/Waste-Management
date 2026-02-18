@@ -1,5 +1,9 @@
 <?php
 // header.php - Reusable header
+// Add this at the top to get notification count
+if (isset($_SESSION['user'])) {
+    $notif_count = count(getUserNotifications($_SESSION['user']));
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -21,8 +25,18 @@
                 <li><a href="index.php?page=service" class="<?php echo isset($_GET['page']) && $_GET['page'] == 'service' ? 'active' : ''; ?>">Service</a></li>
                 <li><a href="index.php?page=about" class="<?php echo isset($_GET['page']) && $_GET['page'] == 'about' ? 'active' : ''; ?>">About Us</a></li>
                 <li><a href="index.php?page=contact" class="<?php echo isset($_GET['page']) && $_GET['page'] == 'contact' ? 'active' : ''; ?>">Contact</a></li>
+                
                 <?php if(isset($_SESSION['user'])): ?>
-                <li><a href="logout.php" class="logout-link">Logout</a></li>
+                    <!-- Notification Bell -->
+                    <li class="notification-item">
+                        <a href="notifications.php" class="notification-link">
+                            <i class="fas fa-bell"></i>
+                            <?php if($notif_count > 0): ?>
+                                <span class="notification-badge"><?php echo $notif_count; ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                    <li><a href="logout.php" class="logout-link">Logout</a></li>
                 <?php endif; ?>
             </ul>
             <div class="hamburger"><i class="fas fa-bars"></i></div>

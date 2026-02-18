@@ -3,6 +3,12 @@
 require_once 'config.php';
 requireLogin();
 
+// Check if user is villager
+if (getUserRole() !== 'villager') {
+    header('Location: role-selection.php');
+    exit;
+}
+
 // Handle pay now action
 if (isset($_POST['pay_now'])) {
     $_SESSION['payment_message'] = 'Payment initiated successfully! (Demo)';

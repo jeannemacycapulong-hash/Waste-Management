@@ -3,6 +3,12 @@
 require_once 'config.php';
 requireLogin();
 
+// Check if user is villager
+if (getUserRole() !== 'villager') {
+    header('Location: role-selection.php');
+    exit;
+}
+
 // Handle form submission
 $success_message = '';
 $error_message = '';
@@ -12,32 +18,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_issue'])) {
     $location = $_POST['location'] ?? '';
     $description = $_POST['description'] ?? '';
     $contact = $_POST['contact'] ?? '';
+    $urgency = $_POST['urgency'] ?? 'low';
     
     // Validate inputs
     if (empty($issue_type) || empty($location) || empty($description)) {
         $error_message = 'Please fill in all required fields.';
     } else {
-        // In a real app, you would save to database here
-        // For demo, we'll store in session to show success
-        $_SESSION['issue_reported'] = [
-            'type' => $issue_type,
+        // Add report to system using the new function
+        addReport('villager', [
+            'issue_type' => $issue_type,
             'location' => $location,
             'description' => $description,
             'contact' => $contact,
-            'date' => date('Y-m-d H:i:s'),
-            'status' => 'Pending'
-        ];
-        $success_message = 'Your issue has been reported successfully!';
+            'urgency' => $urgency
+        ]);
+        
+        $success_message = 'Your issue has been reported successfully! Admin has been notified.';
     }
 }
 
 // Get reported issues from session (demo purposes)
 $reported_issues = isset($_SESSION['reported_issues']) ? $_SESSION['reported_issues'] : [];
-if (isset($_SESSION['issue_reported'])) {
-    array_unshift($reported_issues, $_SESSION['issue_reported']);
-    $_SESSION['reported_issues'] = $reported_issues;
-    unset($_SESSION['issue_reported']);
-}
 
 include 'header.php';
 ?>

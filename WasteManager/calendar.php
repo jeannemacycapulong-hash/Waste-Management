@@ -12,6 +12,18 @@ $current_month = date('F Y');
 // For demo, we'll set collection on Mondays and Thursdays
 $collection_days = ['Monday', 'Thursday'];
 
+// Determine user role based on username
+$username = $_SESSION['user'];
+$user_role = 'villager'; // default
+
+// Map usernames to roles (based on config.php)
+if ($username === 'collector') {
+    $user_role = 'collector';
+} elseif ($username === 'admin') {
+    $user_role = 'admin';
+}
+// user1 and villager remain as 'villager'
+
 // Determine which week to show (current week by default)
 $week_offset = isset($_GET['week']) ? (int)$_GET['week'] : 0;
 $start_of_week = strtotime("monday this week + " . $week_offset . " weeks");
@@ -34,6 +46,18 @@ for ($i = 0; $i < 7; $i++) {
 $prev_week = $week_offset - 1;
 $next_week = $week_offset + 1;
 
+// Determine back link based on user role
+$back_link = 'villager-dashboard.php'; // default
+$back_text = 'Back to Dashboard';
+
+if ($user_role === 'collector') {
+    $back_link = 'collector-dashboard.php';
+    $back_text = 'Back to Collector Dashboard';
+} elseif ($user_role === 'admin') {
+    $back_link = 'admin-dashboard.php';  // Changed from placeholder.php to admin-dashboard.php
+    $back_text = 'Back to Admin Dashboard';
+}
+
 include 'header.php';
 ?>
 
@@ -51,8 +75,10 @@ include 'header.php';
                 Next Week <i class="fas fa-chevron-right"></i>
             </a>
         </div>
-        <a href="villager-dashboard.php" class="btn-back">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        
+        <!-- FIXED: Dynamic back link based on user role -->
+        <a href="<?php echo $back_link; ?>" class="btn-back">
+            <i class="fas fa-arrow-left"></i> <?php echo $back_text; ?>
         </a>
     </div>
 
