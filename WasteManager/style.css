@@ -723,16 +723,14 @@ main {
 
 /* Contact Page */
 .contact-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-    margin: 3rem 0;
+    max-width: 1000px;
+    margin: 3rem auto;
 }
 
-.contact-info {
+.contact-info-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
 }
 
 .contact-item {
@@ -740,6 +738,12 @@ main {
     padding: 2rem;
     border-radius: 15px;
     text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.contact-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(139, 195, 74, 0.2);
 }
 
 .contact-item i {
@@ -750,55 +754,53 @@ main {
 .contact-item h3 {
     color: #2e7d32;
     margin-bottom: 0.5rem;
+    font-size: 1.3rem;
 }
 
 .contact-item p {
     color: #666;
+    line-height: 1.6;
 }
 
-.contact-form {
-    background: #f9f9f9;
-    padding: 2rem;
-    border-radius: 15px;
-}
-
-.contact-form h3 {
-    color: #2e7d32;
-    margin-bottom: 1.5rem;
-    text-align: center;
-}
-
-.contact-form input,
-.contact-form textarea {
-    width: 100%;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    outline: none;
-    transition: border-color 0.3s;
-}
-
-.contact-form input:focus,
-.contact-form textarea:focus {
-    border-color: #8bc34a;
-}
-
+/* Remove old contact-info and contact-form styles */
+.contact-info,
+.contact-form,
 .btn-submit {
-    width: 100%;
-    padding: 1rem;
-    background: #8bc34a;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s;
+    display: none;
 }
 
-.btn-submit:hover {
-    background: #2e7d32;
+/* Responsive design */
+@media (max-width: 768px) {
+    .contact-info-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .contact-item {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .contact-container {
+        margin: 2rem auto;
+    }
+    
+    .contact-item {
+        padding: 1.2rem;
+    }
+    
+    .contact-item i {
+        font-size: 1.8rem;
+    }
+    
+    .contact-item h3 {
+        font-size: 1.2rem;
+    }
+    
+    .contact-item p {
+        font-size: 0.95rem;
+    }
 }
 
 /* Back Button */

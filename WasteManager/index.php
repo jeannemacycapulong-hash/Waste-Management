@@ -79,8 +79,8 @@ if (in_array($page, ['service', 'about', 'contact'])) {
             ?>
             <div class="info-page">
                 <h1>Contact Us</h1>
-                <div class="contact-container">
-                    <div class="contact-info">
+                <div class="contact-container-single">
+                    <div class="contact-info-grid">
                         <div class="contact-item">
                             <i class="fas fa-map-marker-alt fa-2x"></i>
                             <h3>Address</h3>
@@ -101,15 +101,6 @@ if (in_array($page, ['service', 'about', 'contact'])) {
                             <h3>Office Hours</h3>
                             <p>Mon-Fri: 8:00 AM - 5:00 PM</p>
                         </div>
-                    </div>
-                    <div class="contact-form">
-                        <h3>Send us a message</h3>
-                        <form id="contactForm" onsubmit="alert('Message sent! (Demo)'); return false;">
-                            <input type="text" placeholder="Your Name" required>
-                            <input type="email" placeholder="Your Email" required>
-                            <textarea placeholder="Your Message" rows="5" required></textarea>
-                            <button type="submit" class="btn-submit">Send Message</button>
-                        </form>
                     </div>
                 </div>
                 <div class="back-link">
