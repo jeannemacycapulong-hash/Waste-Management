@@ -1454,11 +1454,11 @@ function closeCollectorReportModal() {
     document.getElementById('collectorReportForm').reset();
 }
 
-// Submit villager report
+// Submit villager report (for reporting issues about a specific villager)
 function submitVillagerReport(event) {
     event.preventDefault();
     
-    // Validate form
+    // Get form values
     const issueType = document.getElementById('issueType').value;
     const description = document.getElementById('issueDescription').value;
     const actionTaken = document.querySelector('input[name="actionTaken"]:checked')?.value || '';
@@ -1471,32 +1471,105 @@ function submitVillagerReport(event) {
         return;
     }
     
-    // In a real app, you would send this to the server via AJAX
-    // For demo, we'll simulate a successful report
-    alert('Report submitted successfully! Admin has been notified.');
-    closeReportModal();
-    showSuccess('Issue reported to admin successfully!');
+    // Show loading state
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    
+    // Create form data to send to server
+    const formData = new FormData();
+    formData.append('reporter_type', 'collector');
+    formData.append('issue_type', issueType);
+    formData.append('location', location + ' - ' + villagerName);
+    formData.append('description', description + ' (Action taken: ' + actionTaken + ')');
+    formData.append('urgency', urgency);
+    formData.append('contact', '');
+    formData.append('submit_report', '1');
+    
+    // Send AJAX request
+    fetch('submit_report.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeReportModal();
+            showSuccess('Issue reported to admin successfully!');
+        } else {
+            alert('Error: ' + data.message);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
 }
 
-// Submit collector report
+// Submit collector general report
 function submitCollectorReport(event) {
     event.preventDefault();
     
-    // Validate form
+    // Get form values
     const issueType = document.getElementById('genIssueType').value;
     const location = document.getElementById('genIssueLocation').value;
     const description = document.getElementById('genIssueDescription').value;
     const urgency = document.querySelector('input[name="genUrgency"]:checked')?.value || 'low';
+    
+    // Get checked affected areas
+    const affectedAreas = [];
+    document.querySelectorAll('#collectorReportForm input[type="checkbox"]:checked').forEach(cb => {
+        affectedAreas.push(cb.value);
+    });
     
     if (!issueType || !location || !description) {
         alert('Please fill in all required fields');
         return;
     }
     
-    // In a real app, you would send this to the server via AJAX
-    alert('General issue reported successfully! Admin has been notified.');
-    closeCollectorReportModal();
-    showSuccess('Issue reported to admin successfully!');
+    // Show loading state
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('reporter_type', 'collector');
+    formData.append('issue_type', issueType);
+    formData.append('location', location);
+    formData.append('description', description + ' (Affected areas: ' + affectedAreas.join(', ') + ')');
+    formData.append('urgency', urgency);
+    formData.append('contact', '');
+    formData.append('submit_report', '1');
+    
+    // Send AJAX request
+    fetch('submit_report.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeCollectorReportModal();
+            showSuccess('General issue reported to admin successfully!');
+        } else {
+            alert('Error: ' + data.message);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
 }
 
 // Route Map Functions

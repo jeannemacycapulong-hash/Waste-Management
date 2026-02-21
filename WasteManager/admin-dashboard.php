@@ -176,11 +176,20 @@ include 'header.php';
 
         <div class="reports-list">
             <?php foreach ($all_reports as $report): ?>
-                <div class="report-card <?php echo $report['status']; ?>" data-type="<?php echo $report['type']; ?>" data-status="<?php echo $report['status']; ?>">
+                <div class="report-card <?php echo $report['status']; ?>" 
+                    data-type="<?php echo $report['reporter_type'] ?? $report['type'] ?? 'villager'; ?>" 
+                    data-status="<?php echo $report['status']; ?>">
+                    
                     <div class="report-header">
-                        <div class="report-type-badge <?php echo $report['type']; ?>">
-                            <i class="fas fa-<?php echo $report['type'] === 'villager' ? 'home' : 'truck'; ?>"></i>
-                            <?php echo ucfirst($report['type']); ?> Report
+                        <?php 
+                        // Determine report type (database vs session format)
+                        $report_type = $report['reporter_type'] ?? $report['type'] ?? 'villager';
+                        $report_type_display = ucfirst($report_type);
+                        $report_type_icon = ($report_type === 'villager') ? 'home' : 'truck';
+                        ?>
+                        <div class="report-type-badge <?php echo $report_type; ?>">
+                            <i class="fas fa-<?php echo $report_type_icon; ?>"></i>
+                            <?php echo $report_type_display; ?> Report
                         </div>
                         <span class="report-status <?php echo $report['status']; ?>">
                             <?php echo ucfirst($report['status']); ?>
@@ -188,16 +197,85 @@ include 'header.php';
                     </div>
                     
                     <div class="report-body">
-                        <p><strong>From:</strong> <?php echo $report['reporter_name']; ?> (<?php echo $report['reporter']; ?>)</p>
-                        <p><strong>Type:</strong> <?php echo str_replace('_', ' ', ucfirst($report['issue_type'] ?? 'General')); ?></p>
+                        <p><strong>From:</strong> 
+                            <?php 
+                            // Handle different possible reporter fields
+                            if (isset($report['reporter_name'])) {
+                                echo $report['reporter_name'];
+                            } elseif (isset($report['name'])) {
+                                echo $report['name'];
+                            } else {
+                                echo 'Unknown';
+                            }
+                            
+                            // Show reporter identifier if available
+                            if (isset($report['username'])) {
+                                echo ' (' . $report['username'] . ')';
+                            } elseif (isset($report['reporter'])) {
+                                echo ' (' . $report['reporter'] . ')';
+                            }
+                            ?>
+                        </p>
+                        
+                        <p><strong>Type:</strong> 
+                            <?php 
+                            if (isset($report['issue_type'])) {
+                                echo str_replace('_', ' ', ucfirst($report['issue_type']));
+                            } else {
+                                echo 'General';
+                            }
+                            ?>
+                        </p>
+                        
                         <p><strong>Location:</strong> <?php echo $report['location'] ?? 'N/A'; ?></p>
-                        <p><strong>Description:</strong> <?php echo $report['description'] ?? $report['message'] ?? 'No description'; ?></p>
+                        
+                        <p><strong>Description:</strong> 
+                            <?php 
+                            if (!empty($report['description'])) {
+                                echo nl2br(htmlspecialchars($report['description']));
+                            } elseif (!empty($report['message'])) {
+                                echo nl2br(htmlspecialchars($report['message']));
+                            } else {
+                                echo 'No description';
+                            }
+                            ?>
+                        </p>
+                        
                         <p><strong>Urgency:</strong> 
                             <span class="urgency-tag <?php echo $report['urgency'] ?? 'low'; ?>">
                                 <?php echo ucfirst($report['urgency'] ?? 'low'); ?>
                             </span>
                         </p>
-                        <p><strong>Reported:</strong> <?php echo date('M d, Y h:i A', strtotime($report['created_at'])); ?></p>
+                        
+                        <p><strong>Reported:</strong> 
+                            <?php 
+                            if (isset($report['created_at'])) {
+                                echo date('M d, Y h:i A', strtotime($report['created_at']));
+                            } else {
+                                echo 'Unknown date';
+                            }
+                            ?>
+                        </p>
+                        
+                        <?php if ($report['status'] === 'resolved' && !empty($report['admin_response'])): ?>
+                            <div class="admin-response">
+                                <strong>Admin Response:</strong>
+                                <p><?php echo nl2br(htmlspecialchars($report['admin_response'])); ?></p>
+                                <?php if (isset($report['resolved_at'])): ?>
+                                    <small>Resolved: <?php echo date('M d, Y h:i A', strtotime($report['resolved_at'])); ?></small>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <?php if ($report['status'] === 'pending'): ?>
+                        <div class="report-actions">
+                            <button class="btn-resolve" onclick="openResolveModal('<?php echo $report['id']; ?>')">
+                                <i class="fas fa-check-circle"></i> Resolve Issue
+                            </button>
+                        </div>
+                    <?php endif; ?>
+                </div>
                         
                         <?php if ($report['status'] === 'resolved'): ?>
                             <div class="admin-response">
@@ -327,19 +405,19 @@ include 'header.php';
         </div>
         <div class="modal-body">
             <form id="resolveForm" onsubmit="resolveIssue(event)">
-                <input type="hidden" id="reportId" name="reportId">
+                <input type="hidden" id="reportId" name="reportId" value="">
                 
                 <div class="form-group">
                     <label for="responseMessage">Response Message <span class="required">*</span></label>
-                    <textarea id="responseMessage" rows="4" required 
+                    <textarea id="responseMessage" name="responseMessage" rows="4" required 
                         placeholder="Write your response to the reporter..."></textarea>
                 </div>
 
                 <div class="form-group">
                     <label>Send Notification To:</label>
                     <div class="checkbox-group">
-                        <label><input type="checkbox" id="notifyReporter" value="reporter" checked> Reporter Only</label>
-                        <label><input type="checkbox" id="notifyAll" value="all"> All Users (Broadcast)</label>
+                        <label><input type="checkbox" id="notifyReporter" value="reporter" checked disabled> Reporter Only</label>
+                        <label><input type="checkbox" id="notifyAll" name="notifyAll" value="all"> All Users (Broadcast)</label>
                     </div>
                 </div>
 
@@ -950,6 +1028,7 @@ function filterReports() {
 
 function openResolveModal(reportId) {
     currentReportId = reportId;
+    document.getElementById('reportId').value = reportId; // This line is crucial
     document.getElementById('resolveModal').style.display = 'block';
 }
 
@@ -961,6 +1040,7 @@ function closeResolveModal() {
 function resolveIssue(event) {
     event.preventDefault();
     
+    const reportId = document.getElementById('reportId').value;
     const response = document.getElementById('responseMessage').value;
     const notifyAll = document.getElementById('notifyAll')?.checked || false;
     
@@ -969,13 +1049,79 @@ function resolveIssue(event) {
         return;
     }
     
-    // In a real app, you would send this to the server via AJAX
-    // For demo, we'll show success and close modal
-    alert('Issue resolved! ' + (notifyAll ? 'Broadcast notification sent.' : 'Reporter notified.'));
-    closeResolveModal();
+    if (!reportId) {
+        alert('Report ID is missing');
+        return;
+    }
     
-    // Refresh the page to show updated status
-    location.reload();
+    // Show loading state
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    
+    // Prepare data for submission
+    const formData = new FormData();
+    formData.append('report_id', reportId);
+    formData.append('response', response);
+    formData.append('notify_all', notifyAll ? '1' : '0');
+    formData.append('resolve_report', '1');
+    
+    // Send to server
+    fetch('resolve_report.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            alert('Issue resolved! ' + (notifyAll ? 'Broadcast notification sent to all ' + data.role + 's.' : 'Reporter notified.'));
+            closeResolveModal();
+            
+            // Show a temporary success message
+            showSuccess('Report resolved successfully!');
+            
+            // Reload after a short delay to show updated status
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            alert('Error: ' + data.message);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+}
+
+// ADD THIS HELPER FUNCTION HERE
+function showSuccess(message) {
+    // Create a temporary success message
+    const successDiv = document.createElement('div');
+    successDiv.className = 'success-message';
+    successDiv.style.position = 'fixed';
+    successDiv.style.top = '20px';
+    successDiv.style.right = '20px';
+    successDiv.style.zIndex = '9999';
+    successDiv.style.padding = '1rem 2rem';
+    successDiv.style.background = '#e8f5e9';
+    successDiv.style.color = '#2e7d32';
+    successDiv.style.borderRadius = '10px';
+    successDiv.style.boxShadow = '0 5px 15px rgba(0,0,0,0.2)';
+    successDiv.style.animation = 'slideIn 0.3s ease-out';
+    successDiv.innerHTML = '<i class="fas fa-check-circle"></i> ' + message;
+    
+    document.body.appendChild(successDiv);
+    
+    setTimeout(() => {
+        successDiv.remove();
+    }, 3000);
 }
 
 function openNotificationModal() {

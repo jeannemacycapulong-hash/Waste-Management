@@ -2,7 +2,8 @@
 // header.php - Reusable header
 // Add this at the top to get notification count
 if (isset($_SESSION['user'])) {
-    $notif_count = count(getUserNotifications($_SESSION['user']));
+    // Use the database function
+    $notif_count = count(getUserNotifications(getUserId()));
 }
 ?>
 <!DOCTYPE html>
