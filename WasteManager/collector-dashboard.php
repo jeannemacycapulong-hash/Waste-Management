@@ -10,7 +10,19 @@ if (getUserRole() !== 'collector') {
 }
 
 // Set current date
-$current_date = "Thursday, February 05 2026";
+$current_date = date('l, F d Y');
+
+// Fetch villagers from database
+$villagers = [];
+try {
+    $db = getDB();
+    $stmt = $db->query("SELECT id, name, address FROM users WHERE role = 'villager' AND is_active = 1 ORDER BY name ASC");
+    $villagers = $stmt->fetchAll();
+} catch (Exception $e) {
+    error_log("Collector dashboard DB error: " . $e->getMessage());
+}
+
+$total_villagers = count($villagers);
 
 // Sample assigned routes (in real app, this would come from database)
 $assigned_routes = [
@@ -62,7 +74,7 @@ include 'header.php';
                 
                 <div class="progress-stats">
                     <div class="stat-item">
-                        <span class="stat-value">0/125</span>
+                        <span class="stat-value">0/<?php echo $total_villagers; ?></span>
                         <span class="stat-label">Completed</span>
                     </div>
                     <div class="stat-item">
@@ -70,7 +82,7 @@ include 'header.php';
                         <span class="stat-label">Missed</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-value">125</span>
+                        <span class="stat-value"><?php echo $total_villagers; ?></span>
                         <span class="stat-label">Total</span>
                     </div>
                 </div>
@@ -92,185 +104,58 @@ include 'header.php';
                 </div>
 
                 <div class="checklist-stats">
-                    <span class="stat-badge all">All: 125</span>
-                    <span class="stat-badge pending">Pending: 125</span>
+                    <span class="stat-badge all">All: <?php echo $total_villagers; ?></span>
+                    <span class="stat-badge pending">Pending: <?php echo $total_villagers; ?></span>
                     <span class="stat-badge completed">Completed: 0</span>
                     <span class="stat-badge missed">Missed: 0</span>
                     <span class="stat-badge no-waste">No Waste: 0</span>
                 </div>
 
                 <div class="checklist-container" id="checklistContainer">
-                    <!-- Sample Villager Entries -->
-                    <div class="checklist-item pending" data-status="pending">
-                        <div class="item-header">
-                            <div class="villager-info">
-                                <i class="fas fa-home"></i>
-                                <div>
-                                    <strong>Juan Dela Cruz</strong>
-                                    <span class="address">Blk 1 Lot 2, Pampang Purok</span>
+                    <?php if (empty($villagers)): ?>
+                        <div style="text-align:center; padding: 3rem; color: #999;">
+                            <i class="fas fa-users fa-3x" style="margin-bottom:1rem; display:block;"></i>
+                            <p>No villagers registered in the system yet.</p>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($villagers as $villager):
+                            $name    = htmlspecialchars($villager['name']);
+                            $address = htmlspecialchars($villager['address'] ?? 'No address on record');
+                        ?>
+                        <div class="checklist-item pending" data-status="pending">
+                            <div class="item-header">
+                                <div class="villager-info">
+                                    <i class="fas fa-home"></i>
+                                    <div>
+                                        <strong><?php echo $name; ?></strong>
+                                        <span class="address"><?php echo $address; ?></span>
+                                    </div>
+                                </div>
+                                <span class="status-badge pending">Pending</span>
+                            </div>
+                            <div class="item-actions">
+                                <div class="waste-indicators">
+                                    <span class="waste-type dry"><i class="fas fa-leaf"></i> Dry</span>
+                                    <span class="waste-type wet"><i class="fas fa-water"></i> Wet</span>
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="btn-status complete" onclick="updateStatus(this, 'completed')">
+                                        <i class="fas fa-check"></i> Complete
+                                    </button>
+                                    <button class="btn-status missed" onclick="updateStatus(this, 'missed')">
+                                        <i class="fas fa-times"></i> Missed
+                                    </button>
+                                    <button class="btn-status no-waste" onclick="updateStatus(this, 'no_waste')">
+                                        <i class="fas fa-ban"></i> No Waste
+                                    </button>
+                                    <button class="btn-report" onclick="openReportModal('<?php echo addslashes($name); ?>', '<?php echo addslashes($address); ?>')">
+                                        <i class="fas fa-exclamation-triangle"></i> Report Issue
+                                    </button>
                                 </div>
                             </div>
-                            <span class="status-badge pending">Pending</span>
                         </div>
-                        <div class="item-actions">
-                            <div class="waste-indicators">
-                                <span class="waste-type dry"><i class="fas fa-leaf"></i> Dry</span>
-                                <span class="waste-type wet"><i class="fas fa-water"></i> Wet</span>
-                            </div>
-                            <div class="action-buttons">
-                                <button class="btn-status complete" onclick="updateStatus(this, 'completed')">
-                                    <i class="fas fa-check"></i> Complete
-                                </button>
-                                <button class="btn-status missed" onclick="updateStatus(this, 'missed')">
-                                    <i class="fas fa-times"></i> Missed
-                                </button>
-                                <button class="btn-status no-waste" onclick="updateStatus(this, 'no_waste')">
-                                    <i class="fas fa-ban"></i> No Waste
-                                </button>
-                                <button class="btn-report" onclick="openReportModal('Juan Dela Cruz', 'Blk 1 Lot 2, Pampang Purok')">
-                                    <i class="fas fa-exclamation-triangle"></i> Report Issue
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="checklist-item pending" data-status="pending">
-                        <div class="item-header">
-                            <div class="villager-info">
-                                <i class="fas fa-home"></i>
-                                <div>
-                                    <strong>Maria Santos</strong>
-                                    <span class="address">Blk 2 Lot 5, Pampang Purok</span>
-                                </div>
-                            </div>
-                            <span class="status-badge pending">Pending</span>
-                        </div>
-                        <div class="item-actions">
-                            <div class="waste-indicators">
-                                <span class="waste-type dry"><i class="fas fa-leaf"></i> Dry</span>
-                                <span class="waste-type wet"><i class="fas fa-water"></i> Wet</span>
-                            </div>
-                            <div class="action-buttons">
-                                <button class="btn-status complete" onclick="updateStatus(this, 'completed')">
-                                    <i class="fas fa-check"></i> Complete
-                                </button>
-                                <button class="btn-status missed" onclick="updateStatus(this, 'missed')">
-                                    <i class="fas fa-times"></i> Missed
-                                </button>
-                                <button class="btn-status no-waste" onclick="updateStatus(this, 'no_waste')">
-                                    <i class="fas fa-ban"></i> No Waste
-                                </button>
-                                <button class="btn-report" onclick="openReportModal('Maria Santos', 'Blk 2 Lot 5, Pampang Purok')">
-                                    <i class="fas fa-exclamation-triangle"></i> Report Issue
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="checklist-item pending" data-status="pending">
-                        <div class="item-header">
-                            <div class="villager-info">
-                                <i class="fas fa-home"></i>
-                                <div>
-                                    <strong>Pedro Reyes</strong>
-                                    <span class="address">Blk 3 Lot 8, Pampang Purok</span>
-                                </div>
-                            </div>
-                            <span class="status-badge pending">Pending</span>
-                        </div>
-                        <div class="item-actions">
-                            <div class="waste-indicators">
-                                <span class="waste-type dry"><i class="fas fa-leaf"></i> Dry</span>
-                                <span class="waste-type wet"><i class="fas fa-water"></i> Wet</span>
-                            </div>
-                            <div class="action-buttons">
-                                <button class="btn-status complete" onclick="updateStatus(this, 'completed')">
-                                    <i class="fas fa-check"></i> Complete
-                                </button>
-                                <button class="btn-status missed" onclick="updateStatus(this, 'missed')">
-                                    <i class="fas fa-times"></i> Missed
-                                </button>
-                                <button class="btn-status no-waste" onclick="updateStatus(this, 'no_waste')">
-                                    <i class="fas fa-ban"></i> No Waste
-                                </button>
-                                <button class="btn-report" onclick="openReportModal('Pedro Reyes', 'Blk 3 Lot 8, Pampang Purok')">
-                                    <i class="fas fa-exclamation-triangle"></i> Report Issue
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="checklist-item pending" data-status="pending">
-                        <div class="item-header">
-                            <div class="villager-info">
-                                <i class="fas fa-home"></i>
-                                <div>
-                                    <strong>Ana Lopez</strong>
-                                    <span class="address">Blk 4 Lot 12, Pampang Purok</span>
-                                </div>
-                            </div>
-                            <span class="status-badge pending">Pending</span>
-                        </div>
-                        <div class="item-actions">
-                            <div class="waste-indicators">
-                                <span class="waste-type dry"><i class="fas fa-leaf"></i> Dry</span>
-                                <span class="waste-type wet"><i class="fas fa-water"></i> Wet</span>
-                            </div>
-                            <div class="action-buttons">
-                                <button class="btn-status complete" onclick="updateStatus(this, 'completed')">
-                                    <i class="fas fa-check"></i> Complete
-                                </button>
-                                <button class="btn-status missed" onclick="updateStatus(this, 'missed')">
-                                    <i class="fas fa-times"></i> Missed
-                                </button>
-                                <button class="btn-status no-waste" onclick="updateStatus(this, 'no_waste')">
-                                    <i class="fas fa-ban"></i> No Waste
-                                </button>
-                                <button class="btn-report" onclick="openReportModal('Ana Lopez', 'Blk 4 Lot 12, Pampang Purok')">
-                                    <i class="fas fa-exclamation-triangle"></i> Report Issue
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="checklist-item pending" data-status="pending">
-                        <div class="item-header">
-                            <div class="villager-info">
-                                <i class="fas fa-home"></i>
-                                <div>
-                                    <strong>Jose Mercado</strong>
-                                    <span class="address">Blk 5 Lot 3, Pampang Purok</span>
-                                </div>
-                            </div>
-                            <span class="status-badge pending">Pending</span>
-                        </div>
-                        <div class="item-actions">
-                            <div class="waste-indicators">
-                                <span class="waste-type dry"><i class="fas fa-leaf"></i> Dry</span>
-                                <span class="waste-type wet"><i class="fas fa-water"></i> Wet</span>
-                            </div>
-                            <div class="action-buttons">
-                                <button class="btn-status complete" onclick="updateStatus(this, 'completed')">
-                                    <i class="fas fa-check"></i> Complete
-                                </button>
-                                <button class="btn-status missed" onclick="updateStatus(this, 'missed')">
-                                    <i class="fas fa-times"></i> Missed
-                                </button>
-                                <button class="btn-status no-waste" onclick="updateStatus(this, 'no_waste')">
-                                    <i class="fas fa-ban"></i> No Waste
-                                </button>
-                                <button class="btn-report" onclick="openReportModal('Jose Mercado', 'Blk 5 Lot 3, Pampang Purok')">
-                                    <i class="fas fa-exclamation-triangle"></i> Report Issue
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="load-more">
-                    <button class="btn-load-more" onclick="loadMore()">
-                        <i class="fas fa-sync-alt"></i> Load More
-                    </button>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -584,6 +469,7 @@ include 'header.php';
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 2rem;
+    align-items: start;
 }
 
 /* Today's Schedule Card */

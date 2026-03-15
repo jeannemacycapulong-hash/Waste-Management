@@ -35,7 +35,7 @@ try {
     echo "<p style='color: green;'>✅ Old tables removed</p>";
     
     // =====================================================
-    // Create JUST 3 tables
+    // Create 4 tables
     // =====================================================
     echo "<p>Creating tables...</p>";
     
@@ -63,7 +63,6 @@ try {
         issue_type VARCHAR(50) NOT NULL,
         location VARCHAR(255) NOT NULL,
         description TEXT NOT NULL,
-        contact_number VARCHAR(20),
         urgency ENUM('low', 'medium', 'high') DEFAULT 'low',
         status ENUM('pending', 'resolved') DEFAULT 'pending',
         admin_response TEXT,
@@ -88,6 +87,21 @@ try {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )");
     echo "<p style='color: green;'>✅ Notifications table created</p>";
+
+    // 4. Monthly dues table
+    $pdo->exec("CREATE TABLE monthly_dues (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        villager_id INT NOT NULL,
+        due_month DATE NOT NULL,
+        amount DECIMAL(10,2) NOT NULL DEFAULT 1000.00,
+        status ENUM('unpaid','paid') NOT NULL DEFAULT 'unpaid',
+        payment_method ENUM('cash','gcash','card') DEFAULT NULL,
+        paid_at TIMESTAMP NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY villager_month (villager_id, due_month),
+        FOREIGN KEY (villager_id) REFERENCES users(id) ON DELETE CASCADE
+    )");
+    echo "<p style='color: green;'>✅ Monthly dues table created</p>";
     
     // =====================================================
     // Insert sample data

@@ -64,6 +64,16 @@ body {
 .logo a {
     color: white;
     text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.logo-img {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    border-radius: 6px;
 }
 
 .nav-menu {
@@ -275,7 +285,10 @@ main {
     <header class="site-header">
         <nav class="navbar">
             <div class="logo">
-                <a href="index.php">WasteManager</a>
+                <a href="index.php">
+                    <img src="img/logo.png" alt="WasteManager Logo" class="logo-img">
+                    WasteManager
+                </a>
             </div>
             <ul class="nav-menu">
                 <li><a href="index.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'index.php' && !isset($_GET['page']) ? 'active' : ''; ?>">Home</a></li>

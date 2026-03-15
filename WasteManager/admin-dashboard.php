@@ -9,12 +9,20 @@ if (getUserRole() !== 'admin') {
     exit;
 }
 
-// Get statistics
+// Get statistics from database
 $total_villagers = 0;
 $total_collectors = 0;
-foreach ($GLOBALS['valid_users'] as $user => $data) {
-    if ($data['role'] === 'villager') $total_villagers++;
-    if ($data['role'] === 'collector') $total_collectors++;
+$all_db_users = [];
+try {
+    $db = getDB();
+    $stmt = $db->query("SELECT id, username, name, role, is_active FROM users WHERE role IN ('villager','collector') ORDER BY role, name ASC");
+    $all_db_users = $stmt->fetchAll();
+    foreach ($all_db_users as $u) {
+        if ($u['role'] === 'villager') $total_villagers++;
+        if ($u['role'] === 'collector') $total_collectors++;
+    }
+} catch (Exception $e) {
+    error_log("Admin dashboard DB error: " . $e->getMessage());
 }
 
 // Get pickup statistics
@@ -27,9 +35,6 @@ $resolved_reports = count(array_filter($all_reports, fn($r) => $r['status'] === 
 
 // Get recent reports (last 5)
 $recent_reports = array_slice($all_reports, 0, 5);
-
-// Get unread notifications count for admin
-$admin_notifications = getUserNotifications('admin');
 
 include 'header.php';
 ?>
@@ -44,28 +49,6 @@ include 'header.php';
             <p class="welcome-text">Welcome back, <?php echo getUserName(); ?>!</p>
         </div>
         <div class="header-actions">
-            <div class="notifications-dropdown">
-                <button class="notifications-btn" onclick="toggleNotifications()">
-                    <i class="fas fa-bell"></i>
-                    <?php if (count($admin_notifications) > 0): ?>
-                        <span class="badge"><?php echo count($admin_notifications); ?></span>
-                    <?php endif; ?>
-                </button>
-                <div id="notificationsPanel" class="notifications-panel" style="display: none;">
-                    <h4>Notifications</h4>
-                    <?php if (empty($admin_notifications)): ?>
-                        <p class="no-notifications">No new notifications</p>
-                    <?php else: ?>
-                        <?php foreach ($admin_notifications as $notification): ?>
-                            <div class="notification-item <?php echo $notification['type']; ?>">
-                                <strong><?php echo $notification['title']; ?></strong>
-                                <p><?php echo $notification['message']; ?></p>
-                                <small><?php echo date('M d, H:i', strtotime($notification['created_at'])); ?></small>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-            </div>
             <span class="date-display"><?php echo date('l, F j, Y'); ?></span>
         </div>
     </div>
@@ -276,24 +259,6 @@ include 'header.php';
                         </div>
                     <?php endif; ?>
                 </div>
-                        
-                        <?php if ($report['status'] === 'resolved'): ?>
-                            <div class="admin-response">
-                                <strong>Admin Response:</strong>
-                                <p><?php echo $report['admin_response']; ?></p>
-                                <small>Resolved: <?php echo date('M d, Y h:i A', strtotime($report['resolved_at'])); ?></small>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                    
-                    <?php if ($report['status'] === 'pending'): ?>
-                        <div class="report-actions">
-                            <button class="btn-resolve" onclick="openResolveModal('<?php echo $report['id']; ?>')">
-                                <i class="fas fa-check-circle"></i> Resolve Issue
-                            </button>
-                        </div>
-                    <?php endif; ?>
-                </div>
             <?php endforeach; ?>
             
             <?php if (empty($all_reports)): ?>
@@ -304,41 +269,61 @@ include 'header.php';
 
     <!-- Pickup Monitoring Tab -->
     <div id="pickups-tab" class="tab-content">
+        <?php
+        $db_villagers_pickup = [];
+        try {
+            $db = getDB();
+            $stmt = $db->query("SELECT id, name, address FROM users WHERE role = 'villager' AND is_active = 1 ORDER BY name ASC");
+            $db_villagers_pickup = $stmt->fetchAll();
+        } catch (Exception $e) {
+            error_log("Pickup monitoring DB error: " . $e->getMessage());
+        }
+        $pickup_total = count($db_villagers_pickup);
+        ?>
         <div class="pickup-stats">
-            <span class="stat-badge all">Total: <?php echo $pickup_stats['total']; ?></span>
-            <span class="stat-badge pending">Pending: <?php echo $pickup_stats['pending']; ?></span>
-            <span class="stat-badge completed">Completed: <?php echo $pickup_stats['completed']; ?></span>
-            <span class="stat-badge missed">Missed: <?php echo $pickup_stats['missed']; ?></span>
-            <span class="stat-badge no-waste">No Waste: <?php echo $pickup_stats['no_waste']; ?></span>
+            <span class="stat-badge all">Total: <?php echo $pickup_total; ?></span>
+            <span class="stat-badge pending">Pending: <?php echo $pickup_total; ?></span>
+            <span class="stat-badge completed">Completed: 0</span>
+            <span class="stat-badge missed">Missed: 0</span>
+            <span class="stat-badge no-waste">No Waste: 0</span>
         </div>
 
         <div class="pickups-list">
+            <?php if (empty($db_villagers_pickup)): ?>
+                <p class="no-data">No villagers registered in the system yet.</p>
+            <?php else: ?>
+            <?php
+            // Get all collectors from DB to display alongside villagers
+            $collectors_list = [];
+            try {
+                $stmt = $db->query("SELECT name FROM users WHERE role = 'collector' AND is_active = 1 ORDER BY name ASC");
+                $collectors_list = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            } catch (Exception $e) {
+                error_log("Pickup monitoring collectors error: " . $e->getMessage());
+            }
+            $collector_display = !empty($collectors_list) ? implode(', ', $collectors_list) : 'Unassigned';
+            ?>
             <table class="pickups-table">
                 <thead>
                     <tr>
                         <th>Villager</th>
                         <th>Address</th>
-                        <th>Date</th>
                         <th>Status</th>
                         <th>Collector</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($_SESSION['pickup_statuses'] as $pickup): ?>
+                    <?php foreach ($db_villagers_pickup as $v): ?>
                         <tr>
-                            <td><?php echo $pickup['villager']; ?></td>
-                            <td><?php echo $pickup['address']; ?></td>
-                            <td><?php echo date('M d, Y', strtotime($pickup['date'])); ?></td>
-                            <td>
-                                <span class="status-badge <?php echo $pickup['status']; ?>">
-                                    <?php echo ucfirst(str_replace('_', ' ', $pickup['status'])); ?>
-                                </span>
-                            </td>
-                            <td><?php echo getUserDisplayName($pickup['collector']); ?></td>
+                            <td><?php echo htmlspecialchars($v['name']); ?></td>
+                            <td><?php echo htmlspecialchars($v['address'] ?? 'No address on record'); ?></td>
+                            <td><span class="status-badge pending">Pending</span></td>
+                            <td><?php echo htmlspecialchars($collector_display); ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -356,12 +341,12 @@ include 'header.php';
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($GLOBALS['valid_users'] as $username => $data): ?>
-                            <?php if ($data['role'] === 'villager'): ?>
+                        <?php foreach ($all_db_users as $u): ?>
+                            <?php if ($u['role'] === 'villager'): ?>
                                 <tr>
-                                    <td><?php echo $username; ?></td>
-                                    <td><?php echo $data['name']; ?></td>
-                                    <td><span class="status-badge active">Active</span></td>
+                                    <td><?php echo htmlspecialchars($u['username']); ?></td>
+                                    <td><?php echo htmlspecialchars($u['name']); ?></td>
+                                    <td><span class="status-badge <?php echo $u['is_active'] ? 'active' : 'inactive'; ?>"><?php echo $u['is_active'] ? 'Active' : 'Inactive'; ?></span></td>
                                 </tr>
                             <?php endif; ?>
                         <?php endforeach; ?>
@@ -380,12 +365,12 @@ include 'header.php';
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($GLOBALS['valid_users'] as $username => $data): ?>
-                            <?php if ($data['role'] === 'collector'): ?>
+                        <?php foreach ($all_db_users as $u): ?>
+                            <?php if ($u['role'] === 'collector'): ?>
                                 <tr>
-                                    <td><?php echo $username; ?></td>
-                                    <td><?php echo $data['name']; ?></td>
-                                    <td><span class="status-badge active">Active</span></td>
+                                    <td><?php echo htmlspecialchars($u['username']); ?></td>
+                                    <td><?php echo htmlspecialchars($u['name']); ?></td>
+                                    <td><span class="status-badge <?php echo $u['is_active'] ? 'active' : 'inactive'; ?>"><?php echo $u['is_active'] ? 'Active' : 'Inactive'; ?></span></td>
                                 </tr>
                             <?php endif; ?>
                         <?php endforeach; ?>
@@ -453,8 +438,8 @@ include 'header.php';
                     <label>Select User</label>
                     <select id="specificUser">
                         <option value="">-- Select User --</option>
-                        <?php foreach ($GLOBALS['valid_users'] as $username => $data): ?>
-                            <option value="<?php echo $username; ?>"><?php echo $data['name']; ?> (<?php echo $data['role']; ?>)</option>
+                        <?php foreach ($all_db_users as $u): ?>
+                            <option value="<?php echo htmlspecialchars($u['username']); ?>"><?php echo htmlspecialchars($u['name']); ?> (<?php echo $u['role']; ?>)</option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -521,58 +506,6 @@ include 'header.php';
     align-items: center;
     gap: 1.5rem;
 }
-
-.notifications-btn {
-    background: #f5f5f5;
-    border: none;
-    padding: 0.8rem 1.2rem;
-    border-radius: 10px;
-    cursor: pointer;
-    position: relative;
-    font-size: 1.2rem;
-}
-
-.notifications-btn .badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #f44336;
-    color: white;
-    border-radius: 50%;
-    padding: 0.2rem 0.5rem;
-    font-size: 0.8rem;
-}
-
-.notifications-panel {
-    position: absolute;
-    right: 2rem;
-    top: 5rem;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    width: 300px;
-    max-height: 400px;
-    overflow-y: auto;
-    z-index: 1000;
-}
-
-.notifications-panel h4 {
-    padding: 1rem;
-    margin: 0;
-    border-bottom: 1px solid #e0e0e0;
-    position: sticky;
-    top: 0;
-    background: white;
-}
-
-.notification-item {
-    padding: 1rem;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.notification-item.info { border-left: 3px solid #2196F3; }
-.notification-item.success { border-left: 3px solid #8bc34a; }
-.notification-item.warning { border-left: 3px solid #ff9800; }
 
 .date-display {
     color: #666;
@@ -1142,32 +1075,59 @@ function toggleSpecificUser() {
 
 function sendNotification(event) {
     event.preventDefault();
-    
-    const target = document.getElementById('notificationTarget').value;
-    const title = document.getElementById('notificationTitle').value;
+
+    const target  = document.getElementById('notificationTarget').value;
+    const title   = document.getElementById('notificationTitle').value;
     const message = document.getElementById('notificationMessage').value;
-    const type = document.querySelector('input[name="notifType"]:checked').value;
-    
+    const type    = document.querySelector('input[name="notifType"]:checked').value;
+    const specificUser = document.getElementById('specificUser')?.value || '';
+
     if (!target || !title || !message) {
         alert('Please fill in all required fields');
         return;
     }
-    
-    if (target === 'specific' && !document.getElementById('specificUser').value) {
+
+    if (target === 'specific' && !specificUser) {
         alert('Please select a user');
         return;
     }
-    
-    alert('Notification sent successfully!');
-    closeNotificationModal();
+
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+    const formData = new FormData();
+    formData.append('target', target);
+    formData.append('title', title);
+    formData.append('message', message);
+    formData.append('type', type);
+    formData.append('specific_user', specificUser);
+
+    fetch('send_notification.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeNotificationModal();
+            showSuccess(data.message);
+        } else {
+            alert('Error: ' + data.message);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
 }
 
-function toggleNotifications() {
-    const panel = document.getElementById('notificationsPanel');
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-}
-
-// Close notifications when clicking outside
+// Close modals when clicking outside
 window.onclick = function(event) {
     const modals = ['resolveModal', 'notificationModal'];
     modals.forEach(modalId => {
@@ -1176,24 +1136,7 @@ window.onclick = function(event) {
             modal.style.display = 'none';
         }
     });
-    
-    const notificationsPanel = document.getElementById('notificationsPanel');
-    const notificationsBtn = document.querySelector('.notifications-btn');
-    if (notificationsPanel && notificationsPanel.style.display === 'block' && 
-        !notificationsPanel.contains(event.target) && 
-        !notificationsBtn.contains(event.target)) {
-        notificationsPanel.style.display = 'none';
-    }
 }
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-hide notifications panel after 5 seconds
-    setTimeout(() => {
-        const panel = document.getElementById('notificationsPanel');
-        if (panel) panel.style.display = 'none';
-    }, 5000);
-});
 </script>
 
 <?php include 'footer.php'; ?>

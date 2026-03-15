@@ -61,7 +61,6 @@ CREATE TABLE `reports` (
   `issue_type` varchar(50) NOT NULL,
   `location` varchar(255) NOT NULL,
   `description` text NOT NULL,
-  `contact_number` varchar(20) DEFAULT NULL,
   `urgency` enum('low','medium','high') DEFAULT 'low',
   `status` enum('pending','resolved') DEFAULT 'pending',
   `admin_response` text DEFAULT NULL,
@@ -74,10 +73,10 @@ CREATE TABLE `reports` (
 -- Dumping data for table `reports`
 --
 
-INSERT INTO `reports` (`id`, `reporter_id`, `reporter_type`, `issue_type`, `location`, `description`, `contact_number`, `urgency`, `status`, `admin_response`, `resolved_by`, `resolved_at`, `created_at`) VALUES
-(1, 1, 'villager', 'missed_collection', 'Blk 1 Lot 2, Pampang Purok', 'Collection was missed on Thursday', NULL, 'medium', 'pending', NULL, NULL, NULL, '2026-02-21 07:22:19'),
-(2, 2, 'villager', 'spilled_garbage', 'Blk 2 Lot 5, Pampang Purok', 'Garbage spilled on the road', NULL, 'high', 'pending', NULL, NULL, NULL, '2026-02-21 07:22:19'),
-(3, 3, 'collector', 'vehicle_issue', 'Baranggay Pampang Purok', 'Truck needs maintenance', NULL, 'low', 'pending', NULL, NULL, NULL, '2026-02-21 07:22:19');
+INSERT INTO `reports` (`id`, `reporter_id`, `reporter_type`, `issue_type`, `location`, `description`, `urgency`, `status`, `admin_response`, `resolved_by`, `resolved_at`, `created_at`) VALUES
+(1, 1, 'villager', 'missed_collection', 'Blk 1 Lot 2, Pampang Purok', 'Collection was missed on Thursday', 'medium', 'pending', NULL, NULL, NULL, '2026-02-21 07:22:19'),
+(2, 2, 'villager', 'spilled_garbage', 'Blk 2 Lot 5, Pampang Purok', 'Garbage spilled on the road', 'high', 'pending', NULL, NULL, NULL, '2026-02-21 07:22:19'),
+(3, 3, 'collector', 'vehicle_issue', 'Baranggay Pampang Purok', 'Truck needs maintenance', 'low', 'pending', NULL, NULL, NULL, '2026-02-21 07:22:19');
 
 -- --------------------------------------------------------
 
@@ -186,7 +185,6 @@ CREATE TABLE `monthly_dues` (
   `amount` decimal(10,2) NOT NULL DEFAULT 1000.00,
   `status` enum('unpaid','paid') NOT NULL DEFAULT 'unpaid',
   `payment_method` enum('cash','gcash','card') DEFAULT NULL,
-  `reference_number` varchar(100) DEFAULT NULL,
   `paid_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
