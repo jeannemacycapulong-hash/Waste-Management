@@ -111,6 +111,166 @@ if (in_array($page, ['service', 'about', 'contact'])) {
             break;
     }
     
+    ?>
+    <style>
+    /* ================================================
+       INFO PAGES - Service / About / Contact
+       ================================================ */
+    .info-page {
+        background: white;
+        border-radius: 30px;
+        padding: 3rem;
+        box-shadow: 0 30px 50px rgba(0,0,0,0.1);
+    }
+
+    .info-page h1 {
+        color: #2e7d32;
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 2.5rem;
+    }
+
+    /* Service Cards */
+    .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+
+    .service-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .service-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(139,195,74,0.25);
+    }
+
+    .service-card i {
+        color: #8bc34a;
+        margin-bottom: 1rem;
+    }
+
+    .service-card h3 {
+        color: #2e7d32;
+        margin-bottom: 0.5rem;
+    }
+
+    .service-card p {
+        color: #666;
+    }
+
+    /* About Page */
+    .about-content {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .about-content i {
+        color: #8bc34a;
+        margin-bottom: 1.5rem;
+    }
+
+    .about-content h2 {
+        color: #2e7d32;
+        margin: 1rem 0;
+    }
+
+    .about-content p {
+        color: #666;
+        font-size: 1.1rem;
+        max-width: 800px;
+        margin: 0.5rem auto;
+    }
+
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+
+    .stat {
+        background: white;
+        padding: 2rem;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .stat:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(139,195,74,0.25);
+    }
+
+    .stat h3 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        color: #8bc34a;
+    }
+
+    .stat p {
+        color: #555;
+        font-weight: 500;
+    }
+
+    /* Contact Page */
+    .contact-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 2rem;
+        margin: 2rem 0;
+    }
+
+    .contact-item {
+        background: white;
+        padding: 2rem;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .contact-item:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(139,195,74,0.25);
+    }
+
+    .contact-item i {
+        color: #8bc34a;
+        margin-bottom: 1rem;
+    }
+
+    .contact-item h3 {
+        color: #2e7d32;
+        margin-bottom: 0.5rem;
+        font-size: 1.3rem;
+    }
+
+    .contact-item p {
+        color: #666;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+        .info-page { padding: 1.5rem; }
+        .contact-info-grid { grid-template-columns: 1fr; }
+        .stats-container { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 480px) {
+        .stats-container { grid-template-columns: 1fr; }
+    }
+    </style>
+    <?php
+
     include 'footer.php';
     exit;
 }
@@ -384,7 +544,7 @@ include 'header.php';
                     </label>
                 </div>
                 
-                <!-- Error message divs - UPDATED with emailError -->
+                <!-- Error message divs -->
                 <div id="passwordMatch" style="color: #f44336; font-size: 0.9rem; margin-bottom: 1rem; display: none;">Passwords do not match</div>
                 <div id="usernameError" style="color: #f44336; font-size: 0.9rem; margin-bottom: 1rem; display: none;">Username already exists</div>
                 <div id="emailError" style="color: #f44336; font-size: 0.9rem; margin-bottom: 1rem; display: none;">Email already registered</div>
@@ -420,7 +580,7 @@ function hideCreateAccount() {
     document.getElementById('createAccountForm').querySelector('form').reset();
     document.getElementById('passwordMatch').style.display = 'none';
     document.getElementById('usernameError').style.display = 'none';
-    document.getElementById('emailError').style.display = 'none'; // ADDED
+    document.getElementById('emailError').style.display = 'none';
 }
 
 function showLoginForm() {
@@ -548,3 +708,323 @@ document.getElementById('email')?.addEventListener('input', checkEmailAvailabili
 </script>
 
 <?php include 'footer.php'; ?>
+<style>
+/* Login Page Styles */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+}
+
+.login-card {
+    background: white;
+    padding: 3rem 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 30px 50px rgba(0,0,0,0.2);
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+}
+
+.login-card h1 {
+    color: #2e7d32;
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.login-card h1 .highlight {
+    color: #8bc34a;
+    display: block;
+    font-size: 2.5rem;
+    margin-top: 0.2rem;
+}
+
+.subtitle {
+    color: #666;
+    margin-bottom: 2rem;
+    font-size: 1rem;
+}
+
+.login-form {
+    margin-top: 1.5rem;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    margin-bottom: 1.2rem;
+    padding: 0 1rem;
+    background: #f9f9f9;
+    transition: border-color 0.3s;
+}
+
+.input-group:focus-within {
+    border-color: #8bc34a;
+}
+
+.input-group i {
+    color: #8bc34a;
+    font-size: 1.1rem;
+    margin-right: 0.5rem;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 1rem 0;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 1rem;
+}
+
+.create-account-link {
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.create-account-link a {
+    color: #8bc34a;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.create-account-link a:hover {
+    text-decoration: underline;
+    color: #2e7d32;
+}
+
+.btn-login {
+    width: 100%;
+    padding: 1rem;
+    background: #8bc34a;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 1px;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-login:hover {
+    background: #2e7d32;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(46, 125, 50, 0.3);
+}
+
+.demo-credentials {
+    font-size: 0.85rem;
+    color: #888;
+    background: #f5f5f5;
+    padding: 0.8rem;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 2rem;
+    line-height: 1.5;
+}
+
+/* Password match message */
+#passwordMatch {
+    display: block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #f44336;
+}
+
+/* Service Page */
+.info-page {
+    background: white;
+    border-radius: 30px;
+    padding: 3rem;
+    box-shadow: 0 30px 50px rgba(0,0,0,0.1);
+}
+
+.info-page h1 {
+    color: #2e7d32;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin: 3rem 0;
+}
+
+.service-card {
+    background: #f9f9f9;
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    transition: transform 0.3s;
+}
+
+.service-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 30px rgba(139, 195, 74, 0.2);
+}
+
+.service-card i {
+    color: #8bc34a;
+    margin-bottom: 1rem;
+}
+
+.service-card h3 {
+    color: #2e7d32;
+    margin-bottom: 0.5rem;
+}
+
+.service-card p {
+    color: #666;
+}
+
+/* About Page */
+.about-content {
+    text-align: center;
+    padding: 2rem;
+}
+
+.about-content i {
+    color: #8bc34a;
+    margin-bottom: 1.5rem;
+}
+
+.about-content h2 {
+    color: #2e7d32;
+    margin: 1rem 0;
+}
+
+.about-content p {
+    color: #666;
+    font-size: 1.1rem;
+    max-width: 800px;
+    margin: 0.5rem auto;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 2rem;
+    margin: 3rem 0;
+}
+
+.stat {
+    background: linear-gradient(135deg, #8bc34a, #6a994e);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+}
+
+.stat h3 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Contact Page */
+.contact-container {
+    max-width: 1000px;
+    margin: 3rem auto;
+}
+
+.contact-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+.contact-item {
+    background: #f9f9f9;
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.contact-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(139, 195, 74, 0.2);
+}
+
+.contact-item i {
+    color: #8bc34a;
+    margin-bottom: 1rem;
+}
+
+.contact-item h3 {
+    color: #2e7d32;
+    margin-bottom: 0.5rem;
+    font-size: 1.3rem;
+}
+
+.contact-item p {
+    color: #666;
+    line-height: 1.6;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .login-card {
+        padding: 2rem 1.5rem;
+    }
+
+    .contact-info-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .contact-item {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-card h1 {
+        font-size: 1.8rem;
+    }
+
+    .login-card h1 .highlight {
+        font-size: 2rem;
+    }
+
+    .info-page {
+        padding: 1.5rem;
+    }
+
+    .stats-container {
+        grid-template-columns: 1fr;
+    }
+
+    .contact-container {
+        margin: 2rem auto;
+    }
+
+    .contact-item {
+        padding: 1.2rem;
+    }
+
+    .contact-item i {
+        font-size: 1.8rem;
+    }
+
+    .contact-item h3 {
+        font-size: 1.2rem;
+    }
+
+    .contact-item p {
+        font-size: 0.95rem;
+    }
+}
+</style>

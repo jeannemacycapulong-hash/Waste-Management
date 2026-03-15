@@ -612,16 +612,63 @@ function getUpcomingCollections($limit = 5) {
 // SIMPLIFIED MONTHLY DUES (using session fallback)
 // ============================================
 
+function getOrCreateCurrentDue($villagerId) {
+    try {
+        $db = getDB();
+        $thisMonth = date('Y-m-01');
+
+        // Check if a record already exists for this month
+        $stmt = $db->prepare("SELECT * FROM monthly_dues WHERE villager_id = :vid AND due_month = :month");
+        $stmt->execute([':vid' => $villagerId, ':month' => $thisMonth]);
+        $due = $stmt->fetch();
+
+        if (!$due) {
+            // Auto-create this month's due
+            $stmt = $db->prepare("INSERT INTO monthly_dues (villager_id, due_month, amount, status)
+                                  VALUES (:vid, :month, 1000.00, 'unpaid')");
+            $stmt->execute([':vid' => $villagerId, ':month' => $thisMonth]);
+            $newId = $db->lastInsertId();
+
+            $stmt = $db->prepare("SELECT * FROM monthly_dues WHERE id = :id");
+            $stmt->execute([':id' => $newId]);
+            $due = $stmt->fetch();
+        }
+
+        return $due;
+    } catch (Exception $e) {
+        error_log("getOrCreateCurrentDue error: " . $e->getMessage());
+        return null;
+    }
+}
+
 function getVillagerDues($villagerId) {
-    return [];
+    try {
+        $db = getDB();
+        $stmt = $db->prepare("SELECT * FROM monthly_dues WHERE villager_id = :vid ORDER BY due_month DESC");
+        $stmt->execute([':vid' => $villagerId]);
+        return $stmt->fetchAll();
+    } catch (Exception $e) {
+        error_log("getVillagerDues error: " . $e->getMessage());
+        return [];
+    }
 }
 
 function getCurrentDue($villagerId) {
-    return null;
+    return getOrCreateCurrentDue($villagerId);
 }
 
 function payMonthlyDue($dueId, $paymentMethod = 'cash', $reference = null) {
-    return false;
+    try {
+        $db = getDB();
+        $stmt = $db->prepare("UPDATE monthly_dues
+                              SET status = 'paid', payment_method = :method, reference_number = :ref, paid_at = NOW()
+                              WHERE id = :id AND status = 'unpaid'");
+        $stmt->execute([':method' => $paymentMethod, ':ref' => $reference, ':id' => $dueId]);
+        return $stmt->rowCount() > 0;
+    } catch (Exception $e) {
+        error_log("payMonthlyDue error: " . $e->getMessage());
+        return false;
+    }
 }
 
 // ============================================

@@ -174,6 +174,37 @@ ALTER TABLE `notifications`
 ALTER TABLE `reports`
   ADD CONSTRAINT `reports_ibfk_1` FOREIGN KEY (`reporter_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `reports_ibfk_2` FOREIGN KEY (`resolved_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+-- --------------------------------------------------------
+--
+-- Table structure for table `monthly_dues`
+--
+
+CREATE TABLE `monthly_dues` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `villager_id` int(11) NOT NULL,
+  `due_month` date NOT NULL,
+  `amount` decimal(10,2) NOT NULL DEFAULT 1000.00,
+  `status` enum('unpaid','paid') NOT NULL DEFAULT 'unpaid',
+  `payment_method` enum('cash','gcash','card') DEFAULT NULL,
+  `reference_number` varchar(100) DEFAULT NULL,
+  `paid_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `villager_month` (`villager_id`, `due_month`),
+  CONSTRAINT `monthly_dues_ibfk_1` FOREIGN KEY (`villager_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Sample dues data
+--
+
+INSERT INTO `monthly_dues` (`villager_id`, `due_month`, `amount`, `status`, `payment_method`, `paid_at`) VALUES
+(1, '2026-01-01', 1000.00, 'unpaid', NULL, NULL),
+(1, '2025-12-01', 1000.00, 'paid', 'cash', '2025-12-10 08:00:00'),
+(1, '2025-11-01', 1000.00, 'paid', 'gcash', '2025-11-10 08:00:00'),
+(2, '2026-01-01', 1000.00, 'unpaid', NULL, NULL),
+(2, '2025-12-01', 1000.00, 'paid', 'cash', '2025-12-12 09:00:00');
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
