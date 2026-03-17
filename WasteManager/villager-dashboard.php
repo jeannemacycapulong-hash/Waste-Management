@@ -45,6 +45,9 @@ include 'header.php';
         <a href="monthly-dues.php" class="action-card">
             <i class="fas fa-coins"></i> Monthly Dues
         </a>
+        <a href="delete_account.php" class="action-card danger-card">
+            <i class="fas fa-user-times"></i> Delete Account
+        </a>
     </div>
 </div>
 
@@ -171,6 +174,16 @@ include 'header.php';
 .action-card:hover i {
     color: white;
 }
+
+.danger-card i { color: #e53935 !important; }
+
+.danger-card:hover {
+    background: #e53935 !important;
+    color: white !important;
+    box-shadow: 0 20px 30px rgba(229, 57, 53, 0.3) !important;
+}
+
+.danger-card:hover i { color: white !important; }
 
 /* Responsive Design */
 @media (max-width: 768px) {

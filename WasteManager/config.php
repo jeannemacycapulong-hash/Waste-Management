@@ -550,6 +550,59 @@ function getAllUsersByRole($role = null) {
 }
 
 // ============================================
+// ACCOUNT DELETION FUNCTION
+// ============================================
+
+function deleteVillagerAccount($userId, $passwordConfirm) {
+    try {
+        $db = getDB();
+
+        // Fetch the user record
+        $stmt = $db->prepare("SELECT * FROM users WHERE id = :id AND is_active = 1");
+        $stmt->execute([':id' => $userId]);
+        $user = $stmt->fetch();
+
+        if (!$user) {
+            return ['success' => false, 'message' => 'User not found.'];
+        }
+
+        // Only villagers may self-delete
+        if ($user['role'] !== 'villager') {
+            return ['success' => false, 'message' => 'Only villager accounts can be self-deleted.'];
+        }
+
+        // Verify password
+        if (!password_verify($passwordConfirm, $user['password'])) {
+            // Also allow plain-text passwords stored in demo data
+            if ($passwordConfirm !== $user['password']) {
+                return ['success' => false, 'message' => 'Incorrect password. Please try again.'];
+            }
+        }
+
+        // Notify admins before deletion
+        $admins = $db->query("SELECT id FROM users WHERE role = 'admin' AND is_active = 1")->fetchAll();
+        foreach ($admins as $admin) {
+            addNotification(
+                $admin['id'],
+                'Villager Account Deleted',
+                $user['name'] . ' (' . $user['username'] . ') has deleted their villager account.',
+                'warning'
+            );
+        }
+
+        // Hard-delete the user — CASCADE removes related notifications, reports, dues
+        $del = $db->prepare("DELETE FROM users WHERE id = :id");
+        $del->execute([':id' => $userId]);
+
+        return ['success' => true];
+
+    } catch (Exception $e) {
+        error_log("deleteVillagerAccount error: " . $e->getMessage());
+        return ['success' => false, 'message' => 'A server error occurred. Please try again.'];
+    }
+}
+
+// ============================================
 // LOGOUT FUNCTION
 // ============================================
 

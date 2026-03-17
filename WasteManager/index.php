@@ -478,7 +478,10 @@ include 'header.php';
             </div>
             <div class="input-group">
                 <i class="fas fa-lock"></i>
-                <input type="password" name="password" placeholder="Password" required>
+                <input type="password" name="password" id="login_password" placeholder="Password" required>
+                <button type="button" class="pw-toggle" onclick="togglePw('login_password', 'eye_login')" tabindex="-1">
+                    <i class="fas fa-eye" id="eye_login"></i>
+                </button>
             </div>
             
             <button type="submit" name="login" class="btn-login">
@@ -516,12 +519,18 @@ include 'header.php';
                 <div class="input-group">
                     <i class="fas fa-lock"></i>
                     <input type="password" name="new_password" id="new_password" placeholder="Password *" required>
+                    <button type="button" class="pw-toggle" onclick="togglePw('new_password', 'eye_new')" tabindex="-1">
+                        <i class="fas fa-eye" id="eye_new"></i>
+                    </button>
                 </div>
                 
                 <!-- Confirm Password -->
                 <div class="input-group">
                     <i class="fas fa-lock"></i>
                     <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm Password *" required>
+                    <button type="button" class="pw-toggle" onclick="togglePw('confirm_password', 'eye_confirm')" tabindex="-1">
+                        <i class="fas fa-eye" id="eye_confirm"></i>
+                    </button>
                 </div>
                 
                 <!-- Contact Number -->
@@ -565,6 +574,18 @@ include 'header.php';
 </div>
 
 <script>
+function togglePw(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon  = document.getElementById(iconId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+
 function showCreateAccount() {
     document.getElementById('loginForm').style.display = 'none';
     document.getElementById('createAccountForm').style.display = 'block';
@@ -780,6 +801,22 @@ document.getElementById('email')?.addEventListener('input', checkEmailAvailabili
     background: transparent;
     outline: none;
     font-size: 1rem;
+}
+
+.pw-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #aaa;
+    font-size: 1rem;
+    padding: 0 0 0 0.5rem;
+    line-height: 1;
+    transition: color 0.2s;
+    flex-shrink: 0;
+}
+
+.pw-toggle:hover {
+    color: #8bc34a;
 }
 
 .create-account-link {
