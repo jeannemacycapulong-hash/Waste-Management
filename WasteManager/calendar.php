@@ -193,7 +193,7 @@ include 'header.php';
                 if (in_array($check_day_name, $collection_days)) {
                     $collection_count++;
                     $formatted_date = date('l, F j, Y', $check_date);
-                    $days_from_now = (strtotime(date('Y-m-d', $check_date)) - strtotime($current_date)) / (60 * 60 * 24);
+                    $days_from_now = (int) round((strtotime(date('Y-m-d', $check_date)) - strtotime($current_date)) / (60 * 60 * 24));
                     
                     if ($days_from_now == 0) {
                         $when = "Today";
