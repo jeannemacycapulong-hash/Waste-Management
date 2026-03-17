@@ -393,7 +393,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_account'])) {
             $result = $stmt->execute([
                 ':username' => $new_username,
                 ':email' => $email,
-                ':password' => $new_password,
+                ':password' => password_hash($new_password, PASSWORD_DEFAULT),
                 ':name' => $full_name,
                 ':contact' => $contact_number ?: null,
                 ':address' => $address ?: null

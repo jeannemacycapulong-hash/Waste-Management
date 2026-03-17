@@ -22,7 +22,7 @@ function loginUser($username, $password) {
         $stmt->execute([':username' => $username]);
         $user = $stmt->fetch();
 
-        if ($user && $user['password'] === $password) {
+        if ($user && password_verify($password, $user['password'])) {
             $_SESSION['user']      = $username;
             $_SESSION['user_id']   = $user['id'];
             $_SESSION['user_role'] = $user['role'];

@@ -108,12 +108,16 @@ try {
     // =====================================================
     echo "<p>Inserting sample data...</p>";
     
-    // Insert users
-    $pdo->exec("INSERT INTO users (username, password, name, role, email, contact_number, address) VALUES
-        ('user1', 'pass1', 'Juan Dela Cruz', 'villager', 'juan@email.com', '09123456789', 'Blk 1 Lot 2, Pampang Purok, Angeles City'),
-        ('villager', 'demo', 'Maria Santos', 'villager', 'maria@email.com', '09187654321', 'Blk 2 Lot 5, Pampang Purok, Angeles City'),
-        ('collector', 'demo', 'Pedro Reyes', 'collector', 'pedro@email.com', '09234567890', 'Blk 3 Lot 8, Pampang Purok, Angeles City'),
-        ('admin', 'demo', 'Admin User', 'admin', 'admin@email.com', '09345678901', 'Admin Office, Angeles City')");
+    // Insert users with hashed passwords
+    $hash_pass1 = password_hash('pass1', PASSWORD_DEFAULT);
+    $hash_demo  = password_hash('demo',  PASSWORD_DEFAULT);
+
+    $stmt = $pdo->prepare("INSERT INTO users (username, password, name, role, email, contact_number, address) VALUES
+        ('user1',     :h1, 'Juan Dela Cruz', 'villager', 'juan@email.com',    '09123456789', 'Blk 1 Lot 2, Pampang Purok, Angeles City'),
+        ('villager',  :h2, 'Maria Santos',   'villager', 'maria@email.com',   '09187654321', 'Blk 2 Lot 5, Pampang Purok, Angeles City'),
+        ('collector', :h3, 'Pedro Reyes',    'collector','pedro@email.com',   '09234567890', 'Blk 3 Lot 8, Pampang Purok, Angeles City'),
+        ('admin',     :h4, 'Admin User',     'admin',    'admin@email.com',   '09345678901', 'Admin Office, Angeles City')");
+    $stmt->execute([':h1' => $hash_pass1, ':h2' => $hash_demo, ':h3' => $hash_demo, ':h4' => $hash_demo]);
     echo "<p style='color: green;'>✅ Users inserted</p>";
     
     // Insert sample reports
