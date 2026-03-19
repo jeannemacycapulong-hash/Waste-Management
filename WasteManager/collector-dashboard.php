@@ -122,7 +122,7 @@ include 'header.php';
                             $name    = htmlspecialchars($villager['name']);
                             $address = htmlspecialchars($villager['address'] ?? 'No address on record');
                         ?>
-                        <div class="checklist-item pending" data-status="pending">
+                        <div class="checklist-item pending" data-status="pending" data-villager-id="<?php echo $villager['id']; ?>"><?php // villager_id passed to JS for DB update ?>
                             <div class="item-header">
                                 <div class="villager-info">
                                     <i class="fas fa-home"></i>
@@ -1267,25 +1267,44 @@ function updateStatus(button, status) {
     const checklistItem = button.closest('.checklist-item');
     const statusBadge = checklistItem.querySelector('.status-badge');
     const actionButtons = checklistItem.querySelector('.action-buttons');
-    
+    const villagerId = checklistItem.dataset.villagerId;
+
     // Update data attribute
     checklistItem.dataset.status = status;
-    
+
     // Update status badge
     statusBadge.className = 'status-badge ' + status;
-    statusBadge.textContent = status.split('_').map(word => 
+    statusBadge.textContent = status.split('_').map(word =>
         word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
-    
+
     // Replace action buttons with completion time
     const completionTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     actionButtons.innerHTML = `<span class="completion-time"><i class="far fa-clock"></i> ${completionTime}</span>`;
-    
+
     // Update stats
     updateStats();
-    
-    // Show success message
-    showSuccess('Status updated successfully!');
+
+    // Save to database
+    const formData = new FormData();
+    formData.append('villager_id', villagerId);
+    formData.append('status', status);
+
+    fetch('update_pickup_status.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showSuccess('Status updated successfully!');
+        } else {
+            showSuccess('Status shown but not saved: ' + (data.message || 'error'));
+        }
+    })
+    .catch(() => {
+        showSuccess('Status updated locally.');
+    });
 }
 
 // Update statistics

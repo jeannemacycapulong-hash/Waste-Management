@@ -9,8 +9,11 @@ if (getUserRole() !== 'villager') {
     exit;
 }
 
+// Get today's collection status for this villager
+$today_status = getVillagerTodayStatus(getUserId());
+
 // Set current date
-$current_date = "Thursday, February 05 2026";
+$current_date = date('l, F d Y');
 include 'header.php';
 ?>
 
@@ -35,6 +38,31 @@ include 'header.php';
         </div>
     </div>
 
+    <!-- Today's Collection Status -->
+    <?php
+    $st    = $today_status ? $today_status['status'] : 'pending';
+    $icons = ['pending' => 'fa-clock', 'completed' => 'fa-check-circle', 'missed' => 'fa-times-circle', 'no_waste' => 'fa-ban'];
+    $labels = ['pending' => 'Pending', 'completed' => 'Collected', 'missed' => 'Missed', 'no_waste' => 'No Waste Today'];
+    $colors = ['pending' => '#f57c00', 'completed' => '#2e7d32', 'missed' => '#c62828', 'no_waste' => '#0288d1'];
+    ?>
+    <div class="collection-status-card" style="border-left: 5px solid <?php echo $colors[$st]; ?>">
+        <div class="status-label">Today's Collection Status</div>
+        <div class="status-value" style="color: <?php echo $colors[$st]; ?>">
+            <i class="fas <?php echo $icons[$st]; ?>"></i>
+            <?php echo $labels[$st]; ?>
+        </div>
+        <?php if ($today_status && $today_status['collector_name']): ?>
+            <div class="status-collector">
+                <i class="fas fa-truck"></i> Collector: <?php echo htmlspecialchars($today_status['collector_name']); ?>
+            </div>
+        <?php endif; ?>
+        <?php if ($st === 'pending'): ?>
+            <div class="status-note">Your garbage has not been collected yet today.</div>
+        <?php elseif ($st === 'missed'): ?>
+            <div class="status-note">Collection was missed. Please ensure your bin is accessible next time.</div>
+        <?php endif; ?>
+    </div>
+
     <div class="villager-actions">
         <a href="calendar.php" class="action-card">
             <i class="fas fa-calendar-week"></i> Weekly View
@@ -53,6 +81,46 @@ include 'header.php';
 
 <?php include 'footer.php'; ?>
 <style>
+/* Collection Status Card */
+.collection-status-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.07);
+    border-left: 5px solid #f57c00;
+}
+
+.status-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #888;
+    margin-bottom: 0.5rem;
+}
+
+.status-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0.4rem;
+}
+
+.status-collector {
+    font-size: 0.95rem;
+    color: #666;
+    margin-bottom: 0.3rem;
+}
+
+.status-note {
+    font-size: 0.88rem;
+    color: #888;
+    font-style: italic;
+}
+
 /* Villager Dashboard */
 .dashboard {
     background: white;

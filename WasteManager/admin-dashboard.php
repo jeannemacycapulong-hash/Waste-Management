@@ -26,7 +26,7 @@ try {
 }
 
 // Get pickup statistics
-$pickup_stats = getPickupStats();
+$pickup_stats = getCollectionStats();
 
 // Get all reports
 $all_reports = getAllReports();
@@ -270,39 +270,38 @@ include 'header.php';
     <!-- Pickup Monitoring Tab -->
     <div id="pickups-tab" class="tab-content">
         <?php
-        $db_villagers_pickup = [];
+        $today_statuses = getTodayCollectionStatuses();
+        $collection_stats = getCollectionStats();
+
+        // Build a lookup: villager_id => status record
+        $status_map = [];
+        foreach ($today_statuses as $s) {
+            $status_map[$s['villager_id']] = $s;
+        }
+
+        // Get all villagers
+        $all_villagers_pickup = [];
         try {
             $db = getDB();
             $stmt = $db->query("SELECT id, name, address FROM users WHERE role = 'villager' AND is_active = 1 ORDER BY name ASC");
-            $db_villagers_pickup = $stmt->fetchAll();
-        } catch (Exception $e) {
-            error_log("Pickup monitoring DB error: " . $e->getMessage());
-        }
-        $pickup_total = count($db_villagers_pickup);
+            $all_villagers_pickup = $stmt->fetchAll();
+        } catch (Exception $e) {}
         ?>
         <div class="pickup-stats">
-            <span class="stat-badge all">Total: <?php echo $pickup_total; ?></span>
-            <span class="stat-badge pending">Pending: <?php echo $pickup_total; ?></span>
-            <span class="stat-badge completed">Completed: 0</span>
-            <span class="stat-badge missed">Missed: 0</span>
-            <span class="stat-badge no-waste">No Waste: 0</span>
+            <span class="stat-badge all">Total: <?php echo $collection_stats['total']; ?></span>
+            <span class="stat-badge pending">Pending: <?php echo $collection_stats['pending']; ?></span>
+            <span class="stat-badge completed">Completed: <?php echo $collection_stats['completed']; ?></span>
+            <span class="stat-badge missed">Missed: <?php echo $collection_stats['missed']; ?></span>
+            <span class="stat-badge no-waste">No Waste: <?php echo $collection_stats['no_waste']; ?></span>
         </div>
 
         <div class="pickups-list">
-            <?php if (empty($db_villagers_pickup)): ?>
+            <p style="color:#888; font-size:0.9rem; margin-bottom:1rem;">
+                <i class="fas fa-calendar-day"></i> Showing today's collection status — <?php echo date('F d, Y'); ?>
+            </p>
+            <?php if (empty($all_villagers_pickup)): ?>
                 <p class="no-data">No villagers registered in the system yet.</p>
             <?php else: ?>
-            <?php
-            // Get all collectors from DB to display alongside villagers
-            $collectors_list = [];
-            try {
-                $stmt = $db->query("SELECT name FROM users WHERE role = 'collector' AND is_active = 1 ORDER BY name ASC");
-                $collectors_list = $stmt->fetchAll(PDO::FETCH_COLUMN);
-            } catch (Exception $e) {
-                error_log("Pickup monitoring collectors error: " . $e->getMessage());
-            }
-            $collector_display = !empty($collectors_list) ? implode(', ', $collectors_list) : 'Unassigned';
-            ?>
             <table class="pickups-table">
                 <thead>
                     <tr>
@@ -310,15 +309,26 @@ include 'header.php';
                         <th>Address</th>
                         <th>Status</th>
                         <th>Collector</th>
+                        <th>Updated</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($db_villagers_pickup as $v): ?>
+                    <?php foreach ($all_villagers_pickup as $v):
+                        $s = $status_map[$v['id']] ?? null;
+                        $st = $s ? $s['status'] : 'pending';
+                        $collector_name = $s ? htmlspecialchars($s['collector_name'] ?? '—') : '—';
+                        $updated = $s && $s['updated_at'] ? date('h:i A', strtotime($s['updated_at'])) : '—';
+                    ?>
                         <tr>
-                            <td><?php echo htmlspecialchars($v['name']); ?></td>
-                            <td><?php echo htmlspecialchars($v['address'] ?? 'No address on record'); ?></td>
-                            <td><span class="status-badge pending">Pending</span></td>
-                            <td><?php echo htmlspecialchars($collector_display); ?></td>
+                            <td><strong><?php echo htmlspecialchars($v['name']); ?></strong></td>
+                            <td><?php echo htmlspecialchars($v['address'] ?? '—'); ?></td>
+                            <td>
+                                <span class="status-badge <?php echo $st; ?>">
+                                    <?php echo ucfirst(str_replace('_', ' ', $st)); ?>
+                                </span>
+                            </td>
+                            <td><?php echo $collector_name; ?></td>
+                            <td><?php echo $updated; ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

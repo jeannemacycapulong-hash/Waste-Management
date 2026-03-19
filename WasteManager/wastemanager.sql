@@ -203,6 +203,25 @@ INSERT INTO `monthly_dues` (`villager_id`, `due_month`, `amount`, `status`, `pay
 (2, '2026-01-01', 1000.00, 'unpaid', NULL, NULL),
 (2, '2025-12-01', 1000.00, 'paid', 'cash', '2025-12-12 09:00:00');
 
+-- --------------------------------------------------------
+--
+-- Table structure for table `collection_statuses`
+--
+
+CREATE TABLE `collection_statuses` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `villager_id` int(11) NOT NULL,
+  `collector_id` int(11) NOT NULL,
+  `collection_date` date NOT NULL,
+  `status` enum('pending','completed','missed','no_waste') NOT NULL DEFAULT 'pending',
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `villager_date` (`villager_id`,`collection_date`),
+  CONSTRAINT `cs_ibfk_1` FOREIGN KEY (`villager_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `cs_ibfk_2` FOREIGN KEY (`collector_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

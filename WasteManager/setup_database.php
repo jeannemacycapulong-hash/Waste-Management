@@ -103,6 +103,21 @@ try {
     )");
     echo "<p style='color: green;'>✅ Monthly dues table created</p>";
     
+    // 5. Collection statuses table
+    $pdo->exec("CREATE TABLE collection_statuses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        villager_id INT NOT NULL,
+        collector_id INT NOT NULL,
+        collection_date DATE NOT NULL,
+        status ENUM('pending','completed','missed','no_waste') NOT NULL DEFAULT 'pending',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY villager_date (villager_id, collection_date),
+        FOREIGN KEY (villager_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (collector_id) REFERENCES users(id) ON DELETE CASCADE
+    )");
+    echo "<p style='color: green;'>✅ Collection statuses table created</p>";
+
     // =====================================================
     // Insert sample data
     // =====================================================

@@ -603,6 +603,67 @@ function deleteVillagerAccount($userId, $passwordConfirm) {
 }
 
 // ============================================
+// COLLECTION STATUS FUNCTIONS
+// ============================================
+
+function getTodayCollectionStatuses() {
+    try {
+        $db = getDB();
+        $today = date('Y-m-d');
+        $stmt = $db->prepare("SELECT cs.*, u.name as villager_name, u.address,
+                                      c.name as collector_name
+                               FROM collection_statuses cs
+                               JOIN users u ON cs.villager_id = u.id
+                               LEFT JOIN users c ON cs.collector_id = c.id
+                               WHERE cs.collection_date = :today
+                               ORDER BY u.name ASC");
+        $stmt->execute([':today' => $today]);
+        return $stmt->fetchAll();
+    } catch (Exception $e) {
+        error_log("getTodayCollectionStatuses error: " . $e->getMessage());
+        return [];
+    }
+}
+
+function getVillagerTodayStatus($villagerId) {
+    try {
+        $db = getDB();
+        $today = date('Y-m-d');
+        $stmt = $db->prepare("SELECT cs.status, cs.updated_at, u.name as collector_name
+                               FROM collection_statuses cs
+                               LEFT JOIN users u ON cs.collector_id = u.id
+                               WHERE cs.villager_id = :vid AND cs.collection_date = :today");
+        $stmt->execute([':vid' => $villagerId, ':today' => $today]);
+        return $stmt->fetch();
+    } catch (Exception $e) {
+        error_log("getVillagerTodayStatus error: " . $e->getMessage());
+        return null;
+    }
+}
+
+function getCollectionStats() {
+    try {
+        $db = getDB();
+        $today = date('Y-m-d');
+        $total = $db->query("SELECT COUNT(*) FROM users WHERE role = 'villager' AND is_active = 1")->fetchColumn();
+        $stmt = $db->prepare("SELECT status, COUNT(*) as count FROM collection_statuses WHERE collection_date = :today GROUP BY status");
+        $stmt->execute([':today' => $today]);
+        $rows = $stmt->fetchAll();
+        $stats = ['total' => (int)$total, 'pending' => 0, 'completed' => 0, 'missed' => 0, 'no_waste' => 0];
+        foreach ($rows as $row) {
+            $stats[$row['status']] = (int)$row['count'];
+        }
+        // pending = villagers with no record yet for today
+        $recorded = array_sum([$stats['completed'], $stats['missed'], $stats['no_waste']]);
+        $stats['pending'] = max(0, $total - $recorded);
+        return $stats;
+    } catch (Exception $e) {
+        error_log("getCollectionStats error: " . $e->getMessage());
+        return ['total' => 0, 'pending' => 0, 'completed' => 0, 'missed' => 0, 'no_waste' => 0];
+    }
+}
+
+// ============================================
 // LOGOUT FUNCTION
 // ============================================
 
