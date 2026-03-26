@@ -367,8 +367,7 @@ include 'header.php';
     </div>
 </div>
 
-<!-- Route Map Modal -->
-<!-- <div id="routeMapModal" class="modal modal-large">
+<div id="routeMapModal" class="modal modal-large">
     <div class="modal-content">
         <div class="modal-header">
             <h3><i class="fas fa-map-marked-alt"></i> Today's Collection Route</h3>
@@ -400,10 +399,12 @@ include 'header.php';
                         <p>• Report any issues immediately</p>
                     </div>
                 </div>
+
                 <div class="map-placeholder">
                     <i class="fas fa-map fa-5x"></i>
                     <p>Route map would display here</p>
                     <p class="map-note">(Integration with Google Maps or similar mapping service)</p>
+                    
                     <div class="map-controls">
                         <button class="map-btn"><i class="fas fa-zoom-in"></i> Zoom In</button>
                         <button class="map-btn"><i class="fas fa-zoom-out"></i> Zoom Out</button>
@@ -413,7 +414,7 @@ include 'header.php';
             </div>
         </div>
     </div>
-</div> -->
+</div>
 
 <!-- Success Message Modal -->
 <div id="successModal" class="modal">

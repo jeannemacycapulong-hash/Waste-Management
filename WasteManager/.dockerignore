@@ -1,0 +1,21 @@
+# Logs
+admin_debug.log
+
+# Docs
+README.md
+
+# Docker files (no need to copy these into the image)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Environment
+.env
+
+# Git
+.git
+.gitignore
+
+# Setup files (only needed for initial DB setup, not runtime)
+setup_database.php
+auto_restore.php

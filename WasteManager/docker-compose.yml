@@ -1,63 +1,30 @@
-version: "3.9"
-
-# ─────────────────────────────────────────────
-#  WasteManager – PHP/Apache + MariaDB stack
-# ─────────────────────────────────────────────
-
 services:
 
-  # ── Web / PHP ──────────────────────────────
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: wastemanager_app
-    restart: unless-stopped
     ports:
-      - "8080:80"          # Access the app at http://localhost:8080
-    environment:
-      # These match the hard-coded values in database.php / auto_restore.php
-      MYSQL_HOST: db
-      MYSQL_DATABASE: wastemanager
-      MYSQL_USER: root
-      MYSQL_PASSWORD: ""
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
     depends_on:
-      db:
-        condition: service_healthy
-    volumes:
-      - .:/var/www/html    # Live-reload during development; remove for production
-    networks:
-      - wastemanager_net
-
-  # ── Database / MariaDB ─────────────────────
-  db:
-    image: mariadb:10.11
-    container_name: wastemanager_db
-    restart: unless-stopped
+      - db
     environment:
-      MYSQL_ROOT_PASSWORD: ""          # Matches password: '' in database.php
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-      MYSQL_DATABASE: wastemanager
-    ports:
-      - "3306:3306"        # Optional: expose so you can connect via phpMyAdmin/DBeaver
-    volumes:
-      - db_data:/var/lib/mysql          # Persist data between restarts
-      - ./wastemanager.sql:/docker-entrypoint-initdb.d/wastemanager.sql:ro
-      # ↑ MariaDB auto-imports this SQL file the very first time the volume is created
-    healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      - wastemanager_net
+      DB_HOST: db
+      DB_NAME: wastemanager
+      DB_USER: root
+      DB_PASS: secret
 
-# ── Named volumes ──────────────────────────
+  db:
+    image: mariadb:10.4
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: wastemanager
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./wastemanager.sql:/docker-entrypoint-initdb.d/wastemanager.sql
+
 volumes:
   db_data:
-
-# ── Network ────────────────────────────────
-networks:
-  wastemanager_net:
-    driver: bridge

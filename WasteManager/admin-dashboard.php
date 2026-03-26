@@ -33,13 +33,8 @@ $all_reports = getAllReports();
 $pending_reports = count(array_filter($all_reports, fn($r) => $r['status'] === 'pending'));
 $resolved_reports = count(array_filter($all_reports, fn($r) => $r['status'] === 'resolved'));
 
-// Get recent reports (last 5)
-$recent_reports = array_slice($all_reports, 0, 5);
-
 include 'header.php';
 ?>
-
-<!-- Rest of your HTML remains exactly the same -->
 
 <div class="admin-dashboard">
     <!-- Header -->
@@ -120,26 +115,26 @@ include 'header.php';
                 <i class="fas fa-calendar-week"></i>
                 <span>Weekly Calendar View</span>
             </a>
-            <a href="#reports" onclick="showTab('reports')" class="action-card">
+            <a href="#reports" onclick="showTab('reports', event)" class="action-card">
                 <i class="fas fa-flag"></i>
                 <span>Manage Reports</span>
             </a>
-            <a href="#pickups" onclick="showTab('pickups')" class="action-card">
+            <a href="#pickups" onclick="showTab('pickups', event)" class="action-card">
                 <i class="fas fa-clipboard-check"></i>
                 <span>Monitor Pickups</span>
             </a>
-            <a href="#notifications" onclick="openNotificationModal()" class="action-card">
+            <a href="#notifications" onclick="openNotificationModal(); return false;" class="action-card">
                 <i class="fas fa-bell"></i>
-                <span>Send Notification</span>
+                <span>Send Notifications</span>
             </a>
         </div>
     </div>
 
     <!-- Main Content Tabs -->
     <div class="admin-tabs">
-        <button class="tab-btn active" onclick="showTab('reports')">Reports Management</button>
-        <button class="tab-btn" onclick="showTab('pickups')">Pickup Monitoring</button>
-        <button class="tab-btn" onclick="showTab('users')">User Management</button>
+        <button class="tab-btn active" onclick="showTab('reports', event)">Reports Management</button>
+        <button class="tab-btn" onclick="showTab('pickups', event)">Pickup Monitoring</button>
+        <button class="tab-btn" onclick="showTab('users', event)">User Management</button>
     </div>
 
     <!-- Reports Tab -->
@@ -159,13 +154,12 @@ include 'header.php';
 
         <div class="reports-list">
             <?php foreach ($all_reports as $report): ?>
-                <div class="report-card <?php echo $report['status']; ?>" 
-                    data-type="<?php echo $report['reporter_type'] ?? $report['type'] ?? 'villager'; ?>" 
+                <div class="report-card <?php echo $report['status']; ?>"
+                    data-type="<?php echo $report['reporter_type'] ?? $report['type'] ?? 'villager'; ?>"
                     data-status="<?php echo $report['status']; ?>">
-                    
+
                     <div class="report-header">
-                        <?php 
-                        // Determine report type (database vs session format)
+                        <?php
                         $report_type = $report['reporter_type'] ?? $report['type'] ?? 'villager';
                         $report_type_display = ucfirst($report_type);
                         $report_type_icon = ($report_type === 'villager') ? 'home' : 'truck';
@@ -178,42 +172,33 @@ include 'header.php';
                             <?php echo ucfirst($report['status']); ?>
                         </span>
                     </div>
-                    
+
                     <div class="report-body">
-                        <p><strong>From:</strong> 
-                            <?php 
-                            // Handle different possible reporter fields
+                        <p><strong>From:</strong>
+                            <?php
                             if (isset($report['reporter_name'])) {
-                                echo $report['reporter_name'];
+                                echo htmlspecialchars($report['reporter_name']);
                             } elseif (isset($report['name'])) {
-                                echo $report['name'];
+                                echo htmlspecialchars($report['name']);
                             } else {
                                 echo 'Unknown';
                             }
-                            
-                            // Show reporter identifier if available
                             if (isset($report['username'])) {
-                                echo ' (' . $report['username'] . ')';
+                                echo ' (' . htmlspecialchars($report['username']) . ')';
                             } elseif (isset($report['reporter'])) {
-                                echo ' (' . $report['reporter'] . ')';
+                                echo ' (' . htmlspecialchars($report['reporter']) . ')';
                             }
                             ?>
                         </p>
-                        
-                        <p><strong>Type:</strong> 
-                            <?php 
-                            if (isset($report['issue_type'])) {
-                                echo str_replace('_', ' ', ucfirst($report['issue_type']));
-                            } else {
-                                echo 'General';
-                            }
-                            ?>
+
+                        <p><strong>Type:</strong>
+                            <?php echo isset($report['issue_type']) ? str_replace('_', ' ', ucfirst($report['issue_type'])) : 'General'; ?>
                         </p>
-                        
-                        <p><strong>Location:</strong> <?php echo $report['location'] ?? 'N/A'; ?></p>
-                        
-                        <p><strong>Description:</strong> 
-                            <?php 
+
+                        <p><strong>Location:</strong> <?php echo htmlspecialchars($report['location'] ?? 'N/A'); ?></p>
+
+                        <p><strong>Description:</strong>
+                            <?php
                             if (!empty($report['description'])) {
                                 echo nl2br(htmlspecialchars($report['description']));
                             } elseif (!empty($report['message'])) {
@@ -223,23 +208,17 @@ include 'header.php';
                             }
                             ?>
                         </p>
-                        
-                        <p><strong>Urgency:</strong> 
+
+                        <p><strong>Urgency:</strong>
                             <span class="urgency-tag <?php echo $report['urgency'] ?? 'low'; ?>">
                                 <?php echo ucfirst($report['urgency'] ?? 'low'); ?>
                             </span>
                         </p>
-                        
-                        <p><strong>Reported:</strong> 
-                            <?php 
-                            if (isset($report['created_at'])) {
-                                echo date('M d, Y h:i A', strtotime($report['created_at']));
-                            } else {
-                                echo 'Unknown date';
-                            }
-                            ?>
+
+                        <p><strong>Reported:</strong>
+                            <?php echo isset($report['created_at']) ? date('M d, Y h:i A', strtotime($report['created_at'])) : 'Unknown date'; ?>
                         </p>
-                        
+
                         <?php if ($report['status'] === 'resolved' && !empty($report['admin_response'])): ?>
                             <div class="admin-response">
                                 <strong>Admin Response:</strong>
@@ -250,7 +229,7 @@ include 'header.php';
                             </div>
                         <?php endif; ?>
                     </div>
-                    
+
                     <?php if ($report['status'] === 'pending'): ?>
                         <div class="report-actions">
                             <button class="btn-resolve" onclick="openResolveModal('<?php echo $report['id']; ?>')">
@@ -260,7 +239,7 @@ include 'header.php';
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
-            
+
             <?php if (empty($all_reports)): ?>
                 <p class="no-data">No reports found</p>
             <?php endif; ?>
@@ -273,13 +252,11 @@ include 'header.php';
         $today_statuses = getTodayCollectionStatuses();
         $collection_stats = getCollectionStats();
 
-        // Build a lookup: villager_id => status record
         $status_map = [];
         foreach ($today_statuses as $s) {
             $status_map[$s['villager_id']] = $s;
         }
 
-        // Get all villagers
         $all_villagers_pickup = [];
         try {
             $db = getDB();
@@ -363,7 +340,7 @@ include 'header.php';
                     </tbody>
                 </table>
             </div>
-            
+
             <div class="user-section">
                 <h4><i class="fas fa-truck"></i> Collectors</h4>
                 <table class="users-table">
@@ -401,10 +378,10 @@ include 'header.php';
         <div class="modal-body">
             <form id="resolveForm" onsubmit="resolveIssue(event)">
                 <input type="hidden" id="reportId" name="reportId" value="">
-                
+
                 <div class="form-group">
                     <label for="responseMessage">Response Message <span class="required">*</span></label>
-                    <textarea id="responseMessage" name="responseMessage" rows="4" required 
+                    <textarea id="responseMessage" name="responseMessage" rows="4" required
                         placeholder="Write your response to the reporter..."></textarea>
                 </div>
 
@@ -461,7 +438,7 @@ include 'header.php';
 
                 <div class="form-group">
                     <label for="notificationMessage">Message <span class="required">*</span></label>
-                    <textarea id="notificationMessage" rows="4" required 
+                    <textarea id="notificationMessage" rows="4" required
                         placeholder="Type your notification message..."></textarea>
                 </div>
 
@@ -483,7 +460,6 @@ include 'header.php';
 </div>
 
 <style>
-/* Admin Dashboard Specific Styles */
 .admin-dashboard {
     background: white;
     border-radius: 30px;
@@ -506,10 +482,7 @@ include 'header.php';
     margin: 0;
 }
 
-.welcome-text {
-    color: #666;
-    margin: 0.5rem 0 0;
-}
+.welcome-text { color: #666; margin: 0.5rem 0 0; }
 
 .header-actions {
     display: flex;
@@ -517,14 +490,11 @@ include 'header.php';
     gap: 1.5rem;
 }
 
-.date-display {
-    color: #666;
-    font-weight: 500;
-}
+.date-display { color: #666; font-weight: 500; }
 
 .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
 }
@@ -548,15 +518,12 @@ include 'header.php';
     font-size: 1.5rem;
 }
 
-.metric-icon.blue { background: #e3f2fd; color: #1976d2; }
-.metric-icon.green { background: #e8f5e9; color: #2e7d32; }
+.metric-icon.blue   { background: #e3f2fd; color: #1976d2; }
+.metric-icon.green  { background: #e8f5e9; color: #2e7d32; }
 .metric-icon.orange { background: #fff3e0; color: #f57c00; }
 .metric-icon.purple { background: #f3e5f5; color: #7b1fa2; }
 
-.metric-info {
-    display: flex;
-    flex-direction: column;
-}
+.metric-info { display: flex; flex-direction: column; }
 
 .metric-value {
     font-size: 2rem;
@@ -564,10 +531,7 @@ include 'header.php';
     color: #333;
 }
 
-.metric-label {
-    color: #666;
-    font-size: 0.95rem;
-}
+.metric-label { color: #666; font-size: 0.95rem; }
 
 .metric-breakdown {
     display: flex;
@@ -579,14 +543,9 @@ include 'header.php';
     border-top: 1px solid #e0e0e0;
 }
 
-.quick-actions {
-    margin-bottom: 2rem;
-}
+.quick-actions { margin-bottom: 2rem; }
 
-.quick-actions h3 {
-    color: #2e7d32;
-    margin-bottom: 1rem;
-}
+.quick-actions h3 { color: #2e7d32; margin-bottom: 1rem; }
 
 .action-grid {
     display: grid;
@@ -603,12 +562,14 @@ include 'header.php';
     color: #2e7d32;
     transition: all 0.3s;
     border: 2px solid transparent;
+    cursor: pointer;
 }
 
 .action-card:hover {
     border-color: #8bc34a;
     transform: translateY(-3px);
     box-shadow: 0 10px 20px rgba(139, 195, 74, 0.2);
+    color: #2e7d32;
 }
 
 .action-card i {
@@ -617,9 +578,7 @@ include 'header.php';
     display: block;
 }
 
-.action-card span {
-    font-weight: 600;
-}
+.action-card span { font-weight: 600; }
 
 .admin-tabs {
     display: flex;
@@ -627,6 +586,7 @@ include 'header.php';
     margin-bottom: 1.5rem;
     border-bottom: 2px solid #e0e0e0;
     padding-bottom: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .tab-btn {
@@ -639,20 +599,13 @@ include 'header.php';
     cursor: pointer;
     border-radius: 8px 8px 0 0;
     transition: all 0.3s;
+    font-family: 'Poppins', sans-serif;
 }
 
-.tab-btn.active {
-    color: #2e7d32;
-    background: #e8f5e9;
-}
+.tab-btn.active { color: #2e7d32; background: #e8f5e9; }
 
-.tab-content {
-    display: none;
-}
-
-.tab-content.active {
-    display: block;
-}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
 
 .reports-filters {
     display: flex;
@@ -667,11 +620,10 @@ include 'header.php';
     font-size: 0.95rem;
     outline: none;
     flex: 1;
+    font-family: 'Poppins', sans-serif;
 }
 
-.reports-filters select:focus {
-    border-color: #8bc34a;
-}
+.reports-filters select:focus { border-color: #8bc34a; }
 
 .report-card {
     background: #f9f9f9;
@@ -681,7 +633,7 @@ include 'header.php';
     border-left: 5px solid transparent;
 }
 
-.report-card.pending { border-left-color: #f57c00; }
+.report-card.pending  { border-left-color: #f57c00; }
 .report-card.resolved { border-left-color: #2e7d32; }
 
 .report-header {
@@ -700,7 +652,7 @@ include 'header.php';
     font-weight: 600;
 }
 
-.report-type-badge.villager { background: #e3f2fd; color: #1976d2; }
+.report-type-badge.villager  { background: #e3f2fd; color: #1976d2; }
 .report-type-badge.collector { background: #fff3e0; color: #f57c00; }
 
 .report-status {
@@ -710,13 +662,10 @@ include 'header.php';
     font-weight: 600;
 }
 
-.report-status.pending { background: #fff3e0; color: #f57c00; }
+.report-status.pending  { background: #fff3e0; color: #f57c00; }
 .report-status.resolved { background: #e8f5e9; color: #2e7d32; }
 
-.report-body p {
-    margin: 0.5rem 0;
-    color: #555;
-}
+.report-body p { margin: 0.5rem 0; color: #555; }
 
 .urgency-tag {
     padding: 0.2rem 0.8rem;
@@ -725,9 +674,9 @@ include 'header.php';
     font-weight: 600;
 }
 
-.urgency-tag.low { background: #e8f5e9; color: #2e7d32; }
+.urgency-tag.low    { background: #e8f5e9; color: #2e7d32; }
 .urgency-tag.medium { background: #fff3e0; color: #f57c00; }
-.urgency-tag.high { background: #ffebee; color: #f44336; }
+.urgency-tag.high   { background: #ffebee; color: #f44336; }
 
 .admin-response {
     background: #e8f5e9;
@@ -736,14 +685,9 @@ include 'header.php';
     margin-top: 1rem;
 }
 
-.admin-response strong {
-    color: #2e7d32;
-}
+.admin-response strong { color: #2e7d32; }
 
-.report-actions {
-    margin-top: 1rem;
-    text-align: right;
-}
+.report-actions { margin-top: 1rem; text-align: right; }
 
 .btn-resolve {
     padding: 0.8rem 1.5rem;
@@ -755,18 +699,46 @@ include 'header.php';
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
+    font-family: 'Poppins', sans-serif;
 }
 
-.btn-resolve:hover {
-    background: #2e7d32;
-}
+.btn-resolve:hover { background: #2e7d32; }
 
+/* Pickup stats badges */
 .pickup-stats {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
     margin-bottom: 1.5rem;
 }
+
+.stat-badge {
+    padding: 0.5rem 1.2rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.stat-badge.all       { background: #f5f5f5;  color: #555; }
+.stat-badge.pending   { background: #fff3e0;  color: #f57c00; }
+.stat-badge.completed { background: #e8f5e9;  color: #2e7d32; }
+.stat-badge.missed    { background: #ffebee;  color: #f44336; }
+.stat-badge.no-waste  { background: #e3f2fd;  color: #1976d2; }
+
+/* Status badges (table) */
+.status-badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.status-badge.pending   { background: #fff3e0; color: #f57c00; }
+.status-badge.completed { background: #e8f5e9; color: #2e7d32; }
+.status-badge.missed    { background: #ffebee; color: #f44336; }
+.status-badge.no_waste  { background: #e3f2fd; color: #1976d2; }
+.status-badge.active    { background: #e8f5e9; color: #2e7d32; }
+.status-badge.inactive  { background: #ffebee; color: #f44336; }
 
 .pickups-table {
     width: 100%;
@@ -778,11 +750,13 @@ include 'header.php';
     padding: 1rem;
     background: #f5f5f5;
     color: #2e7d32;
+    font-weight: 600;
 }
 
 .pickups-table td {
     padding: 1rem;
     border-bottom: 1px solid #e0e0e0;
+    color: #555;
 }
 
 .users-grid {
@@ -791,37 +765,33 @@ include 'header.php';
     gap: 2rem;
 }
 
-.user-section h4 {
-    color: #2e7d32;
-    margin-bottom: 1rem;
-}
+.user-section h4 { color: #2e7d32; margin-bottom: 1rem; }
 
-.users-table {
-    width: 100%;
-    border-collapse: collapse;
-}
+.users-table { width: 100%; border-collapse: collapse; }
 
 .users-table th {
     text-align: left;
     padding: 0.8rem;
     background: #f5f5f5;
+    font-weight: 600;
+    color: #2e7d32;
 }
 
 .users-table td {
     padding: 0.8rem;
     border-bottom: 1px solid #e0e0e0;
+    color: #555;
 }
 
-/* Modal Styles */
+/* Modal */
 .modal {
     display: none;
     position: fixed;
     z-index: 2000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
     background: rgba(0,0,0,0.5);
+    overflow-y: auto;
 }
 
 .modal-content {
@@ -836,14 +806,8 @@ include 'header.php';
 }
 
 @keyframes slideIn {
-    from {
-        transform: translateY(-50px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+    from { transform: translateY(-50px); opacity: 0; }
+    to   { transform: translateY(0);     opacity: 1; }
 }
 
 .modal-header {
@@ -854,25 +818,65 @@ include 'header.php';
     align-items: center;
 }
 
-.modal-header h3 {
-    color: #2e7d32;
-    margin: 0;
-}
+.modal-header h3 { color: #2e7d32; margin: 0; }
 
 .close {
     font-size: 2rem;
     font-weight: 700;
     color: #999;
     cursor: pointer;
+    line-height: 1;
 }
 
-.close:hover {
-    color: #333;
+.close:hover { color: #333; }
+
+.modal-body { padding: 1.5rem; }
+
+.form-group { margin-bottom: 1.2rem; }
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
 }
 
-.modal-body {
-    padding: 1.5rem;
+.form-group input[type="text"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: 'Poppins', sans-serif;
+    outline: none;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
 }
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus { border-color: #8bc34a; }
+
+.checkbox-group,
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.checkbox-group label,
+.radio-group label {
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.required { color: #f44336; }
 
 .btn-resolve-submit,
 .btn-send {
@@ -886,12 +890,11 @@ include 'header.php';
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
+    font-family: 'Poppins', sans-serif;
 }
 
 .btn-resolve-submit:hover,
-.btn-send:hover {
-    background: #2e7d32;
-}
+.btn-send:hover { background: #2e7d32; }
 
 .no-data {
     text-align: center;
@@ -902,76 +905,54 @@ include 'header.php';
 
 /* Responsive */
 @media (max-width: 992px) {
-    .users-grid {
-        grid-template-columns: 1fr;
-    }
+    .users-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {
-    .admin-dashboard {
-        padding: 1.5rem;
-    }
-    
-    .metrics-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .action-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .admin-tabs {
-        flex-direction: column;
-    }
-    
-    .reports-filters {
-        flex-direction: column;
-    }
-    
-    .report-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+    .admin-dashboard { padding: 1.5rem; }
+    .metrics-grid { grid-template-columns: 1fr; }
+    .action-grid { grid-template-columns: 1fr 1fr; }
+    .admin-tabs { flex-direction: column; }
+    .reports-filters { flex-direction: column; }
+    .report-header { flex-direction: column; align-items: flex-start; }
+    .pickups-table th:nth-child(2),
+    .pickups-table td:nth-child(2) { display: none; }
+}
+
+@media (max-width: 480px) {
+    .action-grid { grid-template-columns: 1fr; }
 }
 </style>
 
 <script>
-let currentReportId = '';
-
-function showTab(tabName) {
-    // Hide all tabs
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    
-    // Show selected tab
+function showTab(tabName, event) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(tabName + '-tab').classList.add('active');
-    
-    // Update tab buttons
+
+    // Find the correct tab button and activate it
     document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
+        if (btn.textContent.toLowerCase().includes(tabName)) {
+            btn.classList.add('active');
+        }
     });
-    event.target.classList.add('active');
+
+    if (event) event.preventDefault();
 }
 
 function filterReports() {
-    const typeFilter = document.getElementById('reportTypeFilter').value;
+    const typeFilter   = document.getElementById('reportTypeFilter').value;
     const statusFilter = document.getElementById('reportStatusFilter').value;
-    
+
     document.querySelectorAll('.report-card').forEach(card => {
-        const type = card.dataset.type;
-        const status = card.dataset.status;
-        
-        let typeMatch = typeFilter === 'all' || type === typeFilter;
-        let statusMatch = statusFilter === 'all' || status === statusFilter;
-        
+        const typeMatch   = typeFilter   === 'all' || card.dataset.type   === typeFilter;
+        const statusMatch = statusFilter === 'all' || card.dataset.status === statusFilter;
         card.style.display = typeMatch && statusMatch ? 'block' : 'none';
     });
 }
 
 function openResolveModal(reportId) {
-    currentReportId = reportId;
-    document.getElementById('reportId').value = reportId; // This line is crucial
+    document.getElementById('reportId').value = reportId;
     document.getElementById('resolveModal').style.display = 'block';
 }
 
@@ -982,89 +963,45 @@ function closeResolveModal() {
 
 function resolveIssue(event) {
     event.preventDefault();
-    
-    const reportId = document.getElementById('reportId').value;
-    const response = document.getElementById('responseMessage').value;
+
+    const reportId  = document.getElementById('reportId').value;
+    const response  = document.getElementById('responseMessage').value;
     const notifyAll = document.getElementById('notifyAll')?.checked || false;
-    
-    if (!response) {
+
+    if (!response || !reportId) {
         alert('Please enter a response message');
         return;
     }
-    
-    if (!reportId) {
-        alert('Report ID is missing');
-        return;
-    }
-    
-    // Show loading state
-    const submitBtn = event.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
+
+    const submitBtn   = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-    
-    // Prepare data for submission
+
     const formData = new FormData();
-    formData.append('report_id', reportId);
-    formData.append('response', response);
-    formData.append('notify_all', notifyAll ? '1' : '0');
+    formData.append('report_id',      reportId);
+    formData.append('response',       response);
+    formData.append('notify_all',     notifyAll ? '1' : '0');
     formData.append('resolve_report', '1');
-    
-    // Send to server
-    fetch('resolve_report.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Show success message
-            alert('Issue resolved! ' + (notifyAll ? 'Broadcast notification sent to all ' + data.role + 's.' : 'Reporter notified.'));
-            closeResolveModal();
-            
-            // Show a temporary success message
-            showSuccess('Report resolved successfully!');
-            
-            // Reload after a short delay to show updated status
-            setTimeout(() => {
-                location.reload();
-            }, 1500);
-        } else {
-            alert('Error: ' + data.message);
+
+    fetch('resolve_report.php', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                closeResolveModal();
+                showSuccess('Report resolved successfully!');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                alert('Error: ' + data.message);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        })
+        .catch(() => {
+            alert('An error occurred. Please try again.');
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred. Please try again.');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    });
-}
-
-// ADD THIS HELPER FUNCTION HERE
-function showSuccess(message) {
-    // Create a temporary success message
-    const successDiv = document.createElement('div');
-    successDiv.className = 'success-message';
-    successDiv.style.position = 'fixed';
-    successDiv.style.top = '20px';
-    successDiv.style.right = '20px';
-    successDiv.style.zIndex = '9999';
-    successDiv.style.padding = '1rem 2rem';
-    successDiv.style.background = '#e8f5e9';
-    successDiv.style.color = '#2e7d32';
-    successDiv.style.borderRadius = '10px';
-    successDiv.style.boxShadow = '0 5px 15px rgba(0,0,0,0.2)';
-    successDiv.style.animation = 'slideIn 0.3s ease-out';
-    successDiv.innerHTML = '<i class="fas fa-check-circle"></i> ' + message;
-    
-    document.body.appendChild(successDiv);
-    
-    setTimeout(() => {
-        successDiv.remove();
-    }, 3000);
+        });
 }
 
 function openNotificationModal() {
@@ -1079,72 +1016,64 @@ function closeNotificationModal() {
 
 function toggleSpecificUser() {
     const target = document.getElementById('notificationTarget').value;
-    const specificField = document.getElementById('specificUserField');
-    specificField.style.display = target === 'specific' ? 'block' : 'none';
+    document.getElementById('specificUserField').style.display = target === 'specific' ? 'block' : 'none';
 }
 
 function sendNotification(event) {
     event.preventDefault();
 
-    const target  = document.getElementById('notificationTarget').value;
-    const title   = document.getElementById('notificationTitle').value;
-    const message = document.getElementById('notificationMessage').value;
-    const type    = document.querySelector('input[name="notifType"]:checked').value;
+    const target       = document.getElementById('notificationTarget').value;
+    const title        = document.getElementById('notificationTitle').value;
+    const message      = document.getElementById('notificationMessage').value;
+    const type         = document.querySelector('input[name="notifType"]:checked').value;
     const specificUser = document.getElementById('specificUser')?.value || '';
 
-    if (!target || !title || !message) {
-        alert('Please fill in all required fields');
-        return;
-    }
+    if (!target || !title || !message) { alert('Please fill in all required fields'); return; }
+    if (target === 'specific' && !specificUser) { alert('Please select a user'); return; }
 
-    if (target === 'specific' && !specificUser) {
-        alert('Please select a user');
-        return;
-    }
-
-    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const submitBtn    = event.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
     const formData = new FormData();
-    formData.append('target', target);
-    formData.append('title', title);
-    formData.append('message', message);
-    formData.append('type', type);
+    formData.append('target',       target);
+    formData.append('title',        title);
+    formData.append('message',      message);
+    formData.append('type',         type);
     formData.append('specific_user', specificUser);
 
-    fetch('send_notification.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            closeNotificationModal();
-            showSuccess(data.message);
-        } else {
-            alert('Error: ' + data.message);
+    fetch('send_notification.php', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                closeNotificationModal();
+                showSuccess(data.message);
+            } else {
+                alert('Error: ' + data.message);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        })
+        .catch(() => {
+            alert('An error occurred. Please try again.');
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred. Please try again.');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    });
+        });
 }
 
-// Close modals when clicking outside
+function showSuccess(message) {
+    const div = document.createElement('div');
+    div.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;padding:1rem 2rem;background:#e8f5e9;color:#2e7d32;border-radius:10px;box-shadow:0 5px 15px rgba(0,0,0,0.2);font-family:Poppins,sans-serif;font-weight:600;';
+    div.innerHTML = '<i class="fas fa-check-circle"></i> ' + message;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 3000);
+}
+
 window.onclick = function(event) {
-    const modals = ['resolveModal', 'notificationModal'];
-    modals.forEach(modalId => {
-        const modal = document.getElementById(modalId);
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
+    ['resolveModal', 'notificationModal'].forEach(id => {
+        const modal = document.getElementById(id);
+        if (event.target === modal) modal.style.display = 'none';
     });
 }
 </script>
