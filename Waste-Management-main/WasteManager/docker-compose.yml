@@ -1,0 +1,30 @@
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_NAME: wastemanager
+      DB_USER: root
+      DB_PASS: secret
+
+  db:
+    image: mariadb:10.4
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: wastemanager
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./wastemanager.sql:/docker-entrypoint-initdb.d/wastemanager.sql
+
+volumes:
+  db_data:
